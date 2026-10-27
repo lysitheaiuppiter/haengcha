@@ -4,6 +4,28 @@
 
 2026 Pleos Connect 앱 공모전 출품작(팀 COC). 기능·설계 근거는 기획서(`행차_기획서_6차.md`), 개발 기록과 검증 결과는 [docs/plans/2026-10-26-haengcha-app-plan.md](docs/plans/2026-10-26-haengcha-app-plan.md)에 있습니다.
 
+## APK와 테스트 환경
+
+| 파일 | 용도 |
+|---|---|
+| [`apk/COC_haengcha_release.apk`](apk/COC_haengcha_release.apk) | 출시 빌드 0.2.0(41.0MB, 서명). 에뮬레이터에 직접 설치하면 주행 중 사용(DO)을 인정받지 못해 D단에서는 앱 화면이 시스템 화면 '주행 중에는 사용할 수 없습니다'로 가려집니다. 기록·판정·음성 안내는 동작합니다 |
+| [`apk/COC_haengcha_demo.apk`](apk/COC_haengcha_demo.apk) | 시연 빌드(46.3MB). 시연 명령(감찰·휴식 기준 줄이기, 지난 기록 넣기, 기온 바꾸기, 명소 경로)이 들어 있고 주행 중 계기판이 보입니다. 아래 '시연 순서'와 심사용 안내는 이 빌드로 합니다 |
+
+두 APK는 같은 키로 서명해 기록을 지우지 않고 서로 덮어 설치할 수 있습니다.
+
+- 테스트 환경: Pleos Connect 에뮬레이터(시스템 이미지 `pleos_car_emulator` x86_64, Pleos Connect 2.1.0, Android 14, 운전자 계정 user 10). 만드는 법은 아래 '준비물'에 있습니다.
+- 필요한 설정: 처음 실행할 때 위치 권한 창에서 '앱 사용 중에만 허용'(차속과 위치가 함께 허용됨). 주행은 에뮬레이터 Virtual Console을 `tools/vc_drive.py`(Python 3)로 움직여 만들고, 그 전에 `adb forward tcp:8088 tcp:8088`을 합니다.
+- 따로 받을 키나 계정은 없습니다. Pleos SDK는 공개 Maven 저장소에서 받습니다.
+
+```bash
+adb install -r --user 10 apk/COC_haengcha_demo.apk
+adb shell am start --user 10 -n haengcha.app/.MainActivity
+adb forward tcp:8088 tcp:8088
+python tools/vc_drive.py --scenario calm --out calm.csv
+```
+
+20분 안팎에 주요 기능을 차례로 확인하는 심사용 순서는 [docs/submission/haengcha-demo-guide.md](docs/submission/haengcha-demo-guide.md)에 있습니다. 소스에서 직접 빌드하려면 아래 '준비물'과 '빌드'를 따릅니다.
+
 ## 구성
 
 | 경로 | 내용 |
@@ -130,7 +152,7 @@ adb exec-out run-as haengcha.app --user 10 cat files/trips.csv
 
 앱 영역을 두 칸으로 나눠 둔 상태에서 행차가 가운데 칸으로 열리면, 행차가 내비게이션을 앞으로 불러 **[Driving View | 내비게이션 | 행차]** 로 자리 잡습니다(길 안내를 운전자 가까이에 둠). 운전자 메뉴의 '화면 배치'에서 끌 수 있습니다.
 
-처음 설치한 상태에서 1~9가 약 15분, 10~16이 약 20분입니다. 디버그 빌드를 씁니다. 같은 흐름을 에뮬레이터에서 녹화한 시연 영상(`haengcha_demo.mp4`, 3분 23초, 앱 안내 음성 포함)을 제출 자료와 함께 냅니다.
+처음 설치한 상태에서 1~9가 약 15분, 10~16이 약 20분입니다. 디버그 빌드나 `apk/COC_haengcha_demo.apk`를 씁니다. 같은 흐름을 에뮬레이터에서 녹화한 시연 영상(`haengcha_demo.mp4`, 3분 23초, 앱 안내 음성 포함)을 제출 자료와 함께 냅니다.
 
 1. **정차 화면.** 궁궐 마당 단상 위에 소달구지, Lv.0. 배경에서 초롱 불빛이 일렁입니다. 오른쪽 위 메뉴는 도감·동반자·상점·운전자입니다.
 2. **차분한 출퇴근.** `calm`을 재생합니다. D단에 들어가면 "주상전하 납시오!"와 함께 화면이 계기판으로 바뀌고 탈것은 단상에서 내려와 화면 안쪽(배경 지평선)으로 달려가는 뒷모습이 됩니다. 이번 주행 거리와 경험치, 1초마다 차오르는 1분 안전 구간 게이지, 지난 구간 칸, 옛길 원정의 다음 역참까지 남은 거리가 보이고, 구간을 무사히 마치면 "+10XP" 알림 띠가 뜹니다. 배경 영상은 멈추고 값과 연출은 1초에 한 번만 바뀝니다(주행 규제의 영상 금지를 따름). P단으로 돌아오면 +50XP와 "오늘도 안전하게, 행차하셨습니다."가 나옵니다.

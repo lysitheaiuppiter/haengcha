@@ -9,6 +9,8 @@ build/
 .externalNativeBuild
 .cxx
 *.apk
+# 공모전 제출 규칙: APK는 저장소의 apk/ 폴더에 둔다
+!/apk/*.apk
 *.aab
 # 실측 로그(adb pull 결과)
 /probe-logs/

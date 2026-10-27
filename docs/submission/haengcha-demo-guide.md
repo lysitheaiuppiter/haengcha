@@ -6,18 +6,18 @@ Pleos Connect 에뮬레이터에서 행차의 주요 기능을 20분 안팎에 �
 
 | 파일 | 용도 |
 |---|---|
-| `haengcha-0.2.0-demo.apk` | **시연용.** 시연 명령(기간 줄이기, 명소 경로, 기온 바꾸기 등)이 들어 있고, 에뮬레이터에서 주행 중 화면(계기판)이 보입니다 |
-| `haengcha-0.2.0-release.apk` | 출시용. 시연 명령이 없고, 직접 설치하면 주행 중 화면이 시스템 화면 '주행 중에는 사용할 수 없습니다'로 가려집니다(주행 중 사용 인정 전) |
-| `haengcha-0.2.0-source.zip` | 소스. 주행 시나리오를 재생하는 `tools/vc_drive.py`가 들어 있습니다 |
+| `apk/COC_haengcha_demo.apk` | **시연용.** 시연 명령(기간 줄이기, 명소 경로, 기온 바꾸기 등)이 들어 있고, 에뮬레이터에서 주행 중 화면(계기판)이 보입니다 |
+| `apk/COC_haengcha_release.apk` | 출시용. 시연 명령이 없고, 직접 설치하면 주행 중 화면이 시스템 화면 '주행 중에는 사용할 수 없습니다'로 가려집니다(주행 중 사용 인정 전) |
+| 저장소의 소스 | 주행 시나리오를 재생하는 `tools/vc_drive.py`가 들어 있습니다 |
 
-두 APK는 같은 키로 서명해 기록을 지우지 않고 서로 덮어 설치할 수 있습니다.
+모두 GitHub 저장소 https://github.com/lysitheaiuppiter/haengcha 에 있습니다. 두 APK는 같은 키로 서명해 기록을 지우지 않고 서로 덮어 설치할 수 있습니다.
 
 ## 2. 준비 (5분)
 
-필요한 것: Pleos Connect 에뮬레이터(시스템 이미지 `pleos_car_emulator`, Pleos Connect 2.1.0), `adb`, Python 3(표준 라이브러리만 씀). 아래 명령은 소스 압축본을 푼 `haengcha` 폴더에서 실행합니다.
+필요한 것: Pleos Connect 에뮬레이터(시스템 이미지 `pleos_car_emulator`, Pleos Connect 2.1.0), `adb`, Python 3(표준 라이브러리만 씀). 아래 명령은 저장소를 받은 `haengcha` 폴더에서 실행합니다.
 
 ```bash
-adb install -r --user 10 haengcha-0.2.0-demo.apk
+adb install -r --user 10 apk/COC_haengcha_demo.apk
 adb shell am start --user 10 -n haengcha.app/.MainActivity
 adb forward tcp:8088 tcp:8088
 ```
