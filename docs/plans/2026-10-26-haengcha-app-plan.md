@@ -59,9 +59,9 @@ Maven 저장소 `https://nexus-playground.pleos.ai/repository/maven-releases/`�
 | `speedprobe/` | 완료 | 차속 검증 앱. 차속·기어·주차 브레이크·충전 포트·주행 규제를 구독해 CSV로 남긴다. `PleosProbe`는 Vehicle·NaviHelper SDK와 AAOS 프로퍼티 값을 logcat(`PleosProbe`)에 남긴다(5.4) |
 | `tools/vc_drive.py` | 완료 | Virtual Console API로 주행 시나리오(`harsh`, `calm`, `ulsan`, `eco`, `rainynight`, `unbelted`, `short`, `landmark`)를 재생한다. `ulsan`·`landmark`는 `adb emu geo fix`로 GPS도 옮긴다. 시나리오마다 전조등·와이퍼·경고등·적산거리·잔량을 바꾸고, `--preset`으로 주행 없이 값만 바꾼다 |
 | `tools/analyze_probe.py` | 완료 | 프로브 CSV에서 수신 주기, 지연, 가감속, 기어·주행 규제 변화를 요약한다 |
-| `core-judge/` | 완료 | 판정 엔진(순수 Kotlin, JVM 테스트). 급가속·급감속, 1분 구간 경험치·평정심, 레벨·조선 테마, 개근, 주행 시작·종료(`TripTracker`), 암행어사 감찰(`Inspection`), 지역·단골 등급(`Places`), 어린이보호구역·아이 지킴이(`SchoolZone`), 주행 일지(`TripJournal`), 동반자(`Companion`), 기록 형식(`TripRecord`)·진행 요약, 안내 문구(`Announcements`). SDK 연동 판정: 검약·빗길·야행·안전띠(`Extras`), 옛길 원정(`Journey`), 대장간 퀘스트(`Maintenance`), 명소 도착(`Landmarks`), 역참·안내 타이밍(`Rest`), 개근 보호권(`Progress`) |
+| `core-judge/` | 완료 | 판정 엔진(순수 Kotlin, JVM 테스트). 급가속·급감속, 1분 구간 경험치·평정심, 레벨·조선 테마, 개근, 주행 시작·종료(`TripTracker`), 암행어사 감찰(`Inspection`), 지역·단골 등급(`Places`), 어린이보호구역·아이 지킴이(`SchoolZone`), 주행 일지(`TripJournal`), 동반자(`Companion`), 기록 형식(`TripRecord`)·진행 요약, 안내 문구(`Announcements`). SDK 연동 판정: 검약·빗길·야행·안전띠(`Extras`), 옛길 원정(`Journey`), 대장간 퀘스트(`Maintenance`), 명소 도착(`Landmarks`), 역참·안내 타이밍(`Rest`), 개근 보호권(`Progress`). 주행 엔진(`haengcha.drive`): `DriveEngine`(신호·위치 → 주행 시작·종료 → 판정 → 저장 → 음성 → 축하 연출), 기능별 부품(`QuestDesk`, `RestStop`, `ArrivalWatch`, `LiveBoard`, `SceneSignals`), 바깥 연결 인터페이스(`Clock`, `Scheduler`, `RecordStore`, `JournalStore`, `DriveSettings`, `VehicleListener`, `NaviListener`), 화면 상태(`DriveUiState`) |
 | `vehicle/` | 완료 | 수집 계층. AAOS Car API로 차속(최대 주기)·기어·충전 포트·주행 규제(영상 금지 여부 포함)·바깥 기온, Pleos Vehicle SDK(`PleosVehicleSignals`)로 잔량·전비·적산거리·경고등·엔진오일·안전띠·전조등·와이퍼, NaviHelper(`PleosNavi`)로 목적지·도착·회전 안내를 받고 휴게소 검색 화면을 요청한다 |
-| `app/` | 완료(시연판) | `DriveController`(신호·위치 → 주행 판단 → 판정 → 저장 → 음성 → 축하 연출), `LocationSource`, `TripStore`(운전자별 `trips*.csv`), `TripJournalFile`(진행 중 주행 일지), `CollectService`(위치 유형 포그라운드 서비스), `AppPrefs`(운전자·콜라보 보유), `VoiceGuide`, Compose 화면(정차 화면, 주행 한 줄, 어린이보호구역, 도감·쉬어가는 행차, 동반자, 콜라보 상점, 운전자 전환, 축하 연출). 디버그 빌드 전용 `DebugReceiver`. 패키지명은 임시 `haengcha.app` |
+| `app/` | 완료(시연판) | `DriveController`(주행 엔진을 Android에 잇는 연결 층: SystemClock, 메인 Handler, 차량 신호·내비게이션 구독), `LocationSource`, `TripStore`(운전자별 `trips*.csv`), `TripJournalFile`(진행 중 주행 일지), `CollectService`(위치 유형 포그라운드 서비스), `AppPrefs`(운전자·콜라보 보유), `VoiceGuide`, Compose 화면(정차 화면, 주행 계기판, 어린이보호구역, 도감·쉬어가는 행차, 동반자, 콜라보 상점, 운전자 전환, 축하 연출). 디버그 빌드 전용 `DebugReceiver`. 패키지명은 임시 `haengcha.app` |
 | `app/src/main/assets/voice/` | 완료 | 안내 문장 75개 녹음(SDK 연동 기능 34개 추가, `--only-missing`으로 기존 녹음은 그대로)(소개 영상과 같은 Supertonic 3 0번 목소리, 22.05kHz 모노). `tools/make_voice_clips.py`로 다시 만든다 |
 | `app/src/main/assets/motion/` | 완료 | 움직이는 배경 22편(궁궐, 울산 등급 5, 횡성 등급 5 × landscape·portrait), 11초 반복 H.264, 합계 5.4MB. `motion.json`은 정지 그림과 같은 순간의 영상 시각 |
 | `app/src/main/assets/scenes/`, `icons/` | 완료 | 정지 배경 22장, 탈것 레이어 10장(투명), 도감 아이콘 5장 |
@@ -84,6 +84,7 @@ Maven 저장소 `https://nexus-playground.pleos.ai/repository/maven-releases/`�
 |---|---|
 | 10/26 | 개발 환경, 차속 검증 앱과 재생·분석 도구, 판정 엔진, 수집 계층, 앱(주행 시작·종료, 판정, 저장, 감찰, 녹음 음성, 지역·단골, 어린이보호구역, 주행 복원, 포그라운드 서비스, 축하 연출, 쉬어가는 행차, 동반자·콜라보 상점·운전자 전환 목업), 3D 정차 화면과 움직이는 배경, 앱 아이콘 (완료) |
 | 10/27 | Pleos Vehicle·NaviHelper SDK 실측(5.4)과 연동 기능 9개: 검약 행차, 대장간 퀘스트·개근 보호권, 역참, 옛길 원정, 야행, 날씨 장면, 안전띠 개근, 도착 스탬프, 안내 타이밍 (완료) |
+| 10/27 | 앱의 `DriveController`(692줄)를 순수 Kotlin 주행 엔진(`core-judge`의 `haengcha.drive`)과 기능별 부품으로 나누고, 앱에는 연결 층만 남김. 가짜 시계·저장소·차량 신호로 주행을 재생하는 통합 테스트 16개 추가(5.5) (완료) |
 | 10/27 ~ 11/12 | Pleos 문의(DO 인정 절차, TTS SDK 공개 일정, Driving View 테마 연동), 출시 서명 방식 결정과 서명 APK, 데브박스·실차 확인, 시연 영상에 앱 화면 반영 |
 | 11/13 ~ 11/15 | 통합 테스트, 제출 |
 
@@ -237,9 +238,17 @@ Virtual Console API (페이지 스크립트에서 확인)
 - 시연 중 남은 일: 축하 연출은 화면 '확인'을 눌러 넘기는데, Pleos 홈의 TaskView 안 화면은 `uiautomator dump`에 나오지 않아 좌표로 눌렀다.
 - 회전 앞에서 미룬 '쉬어 갈 때' 안내가 주차한 뒤에 나올 수 있다(최대 30초 미룸). 주차 중 안내는 미루지 않게 바꿨다.
 
+### 5.5 주행 엔진 분리와 통합 테스트 (2026-10-27)
+
+- 이유: 앱의 `DriveController`가 주행 시작·종료, 일지, 퀘스트, 역참, 도착, 계기판, 음성 미루기, 축하 연출을 한 클래스(692줄)에서 맡았고, Android 의존(Handler, SystemClock, SharedPreferences, 파일) 때문에 자동 시험이 없었다. 5.4의 버그 넷(퀘스트 흔들림, 적산거리 0, 제자리 도착, 기온 덮어쓰기)은 모두 에뮬레이터에서만 잡혔다.
+- 구조: 판정 로직을 `core-judge`의 `haengcha.drive.DriveEngine`으로 옮기고 바깥 일은 인터페이스로 받는다(`Clock`, `Scheduler`, `RecordStore`, `JournalStore`, `DriveSettings`, 음성·휴게소 검색 함수). 기능은 부품으로 나눴다: `QuestDesk`(대장간 퀘스트), `RestStop`(역참), `ArrivalWatch`(명소 도착), `LiveBoard`(계기판·알림 띠), `SceneSignals`(야행·날씨), `celebrationsFor`(축하 연출). 신호 인터페이스(`VehicleListener`, `NaviListener`, `SignalStatus`)와 화면 상태(`DriveUiState`, `Celebration`, `LiveView`, `Profile`)도 `haengcha.drive`로 옮겨, `vehicle`이 엔진에 바로 신호를 넘긴다. 앱의 `DriveController`는 SystemClock·메인 Handler·`AppPrefs`·`TripStore`·`TripJournalFile`을 엔진에 잇는 93줄 연결 층이 됐다.
+- 시험대(`core-judge/src/test/kotlin/haengcha/drive/Rig.kt`): 가짜 시계 겸 예약 실행기, 메모리 기록·일지·설정. 기어와 차속을 10Hz로 넣고 중간에 차량 신호를 끼울 수 있다. 엔진을 같은 일지로 다시 띄워 프로세스 재시작을 흉내 낸다.
+- 통합 테스트 16개(`DriveEngineTest`): 차분한 주행 저장·탑승/마감 안내, 퀘스트 흔들림 무시, 퀘스트 완료와 보호권, 주행 중 켜진 경고는 주차 후 안내, 검약 행차와 옛길 지점, 적산거리 0이어도 원정 진행, 제자리 주행은 도착 아님·밖에서 들어오면 스탬프·두 번째는 보너스 없음, 내비게이션 도착 알림, 안전띠와 보호권, 역참 안내·휴게소 검색·휴식 보너스, 경로 위 휴게소, 회전 앞 음성 미루기와 주차 중 즉시 안내, 어린이보호구역 안내는 미루지 않음, 계기판 +10XP 알림 띠, 시연 기온 고정, 같은 부팅 이어 가기·재부팅 뒤 조용한 마감.
+- 확인: 처음 실패한 2개는 시험 시나리오 문제였다(하루 5분 미만 주행은 개근에 세지 않음, 휴식 남은 시간은 주차 뒤 1초 갱신에서 셈). 고친 뒤 `core-judge` 95개, 앱 8개 통과. 리팩터링한 출시 빌드를 에뮬레이터에 덮어 설치해 경고등 퀘스트 열림(3초 확인)·`short` 주행 저장·퀘스트 완료와 보호권 연출을 확인했다. 제출용 0.2.0 APK·압축본도 리팩터링한 소스로 다시 만들었다(6장).
+
 ## 6. 검증 명령
 
-판정 엔진과 앱 단위 테스트 (2026-10-27 결과: 87개 통과. 판정 엔진 79, 앱 8)
+판정 엔진·주행 엔진과 앱 단위 테스트 (2026-10-27 결과: 103개 통과. `core-judge` 95(판정 79, 주행 엔진 통합 16), 앱 8)
 
 ```bash
 ./gradlew :core-judge:test :app:testDebugUnitTest
@@ -318,7 +327,7 @@ apksigner verify --verbose --print-certs app/build/outputs/apk/release/app-relea
 - 서명 키는 저장소 밖 `%USERPROFILE%\.android-keys\haengcha-release.jks`(PKCS12, 별칭 `haengcha`, RSA 4096, 2054-03-14까지)에 있다. 비밀번호는 같은 폴더의 `haengcha-release.properties`에만 있고 저장소·문서에는 넣지 않는다. 다른 위치의 파일을 쓰려면 `-PhaengchaSigning=<파일>`.
 - 인증서 SHA-256 `7F:47:56:DA:38:CF:F4:A1:74:41:D9:76:20:56:A2:2D:EE:DB:21:5B:23:A0:6A:E3:5B:8B:D2:07:D1:C4:E4:DD`, 서명 방식 v2.
 - 결과(0.1.0): `app-release.apk` 28.4MB, 검증 통과. 디버그 전용 `DebugReceiver`는 들어가지 않는다. 제출용 사본은 `docs/submission/haengcha-0.1.0-release.apk`(SHA-256 `3e14a330…09a1a7`, `.gitignore`의 `*.apk`로 저장소 밖).
-- 결과(0.2.0, versionCode 2, 2026-10-27): Pleos SDK 연동 기능과 주행 계기판을 넣은 빌드. `app-release.apk` 36.5MB(SDK 라이브러리와 녹음 75개로 늘어남), 같은 키·v2 서명 검증 통과, `pleos.car.permission.*` 조회 권한 11개, `DebugReceiver` 없음. 제출용 사본은 `docs/submission/haengcha-0.2.0-release.apk`. 도착 판정을 고쳐 같은 0.2.0으로 다시 빌드했다(SHA-256 `b181396c…edc6a`, 처음 만든 것은 `a54ef907…23b1e9`). - 0.2.0 출시 빌드 에뮬레이터 확인(2026-10-27): 디버그 앱을 지우고 설치. 첫 실행 권한 창 한 번으로 `CAR_SPEED`·정밀/대략 위치 허용, `pleos.car.permission.*` 11개는 설치 때 허용, 포그라운드 서비스 `isForeground=true types=0x8`. Vehicle SDK는 전비·엔진오일만 미지원으로 남음(디버그와 같음). `eco` 주행 기록 `km_per_kwh=10.77, odo_km=25.000, eco=1, belt=1`, 주차 후 검약 행차 연출과 "검약 행차! … 옛길 원정, 판교에 이르렀습니다." 재생.
+- 결과(0.2.0, versionCode 2, 2026-10-27): Pleos SDK 연동 기능과 주행 계기판을 넣은 빌드. `app-release.apk` 36.5MB(SDK 라이브러리와 녹음 75개로 늘어남), 같은 키·v2 서명 검증 통과, `pleos.car.permission.*` 조회 권한 11개, `DebugReceiver` 없음. 제출용 사본은 `docs/submission/haengcha-0.2.0-release.apk`. 도착 판정을 고쳐 같은 0.2.0으로 다시 빌드했고(`b181396c…edc6a`, 처음 만든 것은 `a54ef907…23b1e9`), 주행 엔진 분리(5.5) 뒤 한 번 더 빌드했다(36.5MB, SHA-256 `3956405b…0611c0`, 같은 키·v2 서명 검증 통과). - 0.2.0 출시 빌드 에뮬레이터 확인(2026-10-27): 디버그 앱을 지우고 설치. 첫 실행 권한 창 한 번으로 `CAR_SPEED`·정밀/대략 위치 허용, `pleos.car.permission.*` 11개는 설치 때 허용, 포그라운드 서비스 `isForeground=true types=0x8`. Vehicle SDK는 전비·엔진오일만 미지원으로 남음(디버그와 같음). `eco` 주행 기록 `km_per_kwh=10.77, odo_km=25.000, eco=1, belt=1`, 주차 후 검약 행차 연출과 "검약 행차! … 옛길 원정, 판교에 이르렀습니다." 재생.
 - **출시 빌드는 주행 중 앱 영역이 시스템 화면 '주행 중에는 사용할 수 없습니다'로 가려졌다**(D단 30·65·150·215초 캡처 모두). 같은 에뮬레이터에서 디버그 빌드는 주행 계기판이 보였다. 직접 설치한 출시 빌드는 DO를 인정받지 못하기 때문으로 보이며, 0.1.0 출시 확인 때 '배경 멈춤'으로 적은 것도 이 차단 화면이었을 수 있다. 주행 계기판은 App Market에서 DO를 인정받아야 실차에서 보이고, 그 전까지 에뮬레이터 시연은 디버그 빌드로 한다. 기록·판정·음성은 가려져도 그대로 동작했다.
 - 같은 주행에 `regions=ULSAN, stamp=DAEWANGAM`이 붙었다. 앞선 디버그 시연에서 에뮬레이터 GPS가 대왕암공원 근처에 남아 있었고 내비게이션 경로도 대왕암공원으로 남아 있어, 제자리에서 출발해 제자리에서 끝난 주행이 '목적지 300m 안에서 끝남'으로 도착 판정됐다. 출발 위치도 반경 밖이었을 때만 도착으로 보도록 고쳤다. 고친 출시 빌드로 같은 상태(GPS 대왕암공원 근처, 내비게이션 목적지 대왕암공원)에서 `short`를 달리면 `stamp`가 비고, `landmark`(약 2.7km 밖에서 출발)는 `stamp=DAEWANGAM`(이미 받은 명소라 보너스 없이 20XP)으로 저장됐다. `vc_drive.py`는 경로가 있는 시나리오에서 첫 GPS를 보낸 뒤 2초 기다렸다가 기어를 넣는다(앱이 출발 위치를 받게).
 - 디버그 빌드와 서명이 달라 덮어 설치할 수 없어, 디버그 앱을 지우고(시험 기록 삭제) 설치했다.
@@ -344,7 +353,8 @@ PY
 
 - `.gitignore`를 따르는 파일만 담는다(빌드 결과, `local.properties`, `probe-logs/`, `node_modules/`, APK·압축본 제외). 서명 키와 비밀번호 파일은 저장소 밖이라 들어가지 않는다.
 - 결과(0.1.0): 200개 파일, 12.0MB. 시험으로 짧은 경로에 풀어 `local.properties` 없이 `ANDROID_HOME`만 주고 `assembleDebug`, `:core-judge:test`, `:app:testDebugUnitTest`를 돌려 통과했다(디버그 APK 2개, 테스트 55개).
-- 결과(0.2.0): 249개 파일, 15.1MB. 같은 방법으로 풀어(스크래치 폴더, `local.properties` 없음) 빌드·테스트가 통과했다(디버그 APK 2개, 테스트 87개, 도착 판정을 고친 뒤 다시 확인). 시험한 압축본과 최종본은 이 문서·README·`.gitignore` 같은 문서만 다르다.
+- 결과(0.2.0): 249개 파일, 15.1MB. 같은 방법으로 풀어(스크래치 폴더, `local.properties` 없음) 빌드·테스트가 통과했다(디버그 APK 2개, 테스트 87개, 도착 판정을 고친 뒤 다시 확인).
+- 결과(0.2.0, 주행 엔진 분리 뒤): 256개 파일. 최종 압축본을 그대로 풀어 빌드·테스트가 통과했다(디버그 APK 2개, 테스트 103개). 시험한 압축본과 최종본은 이 문서·README·`.gitignore` 같은 문서만 다르다.
 
 ## 7. 남은 위험
 

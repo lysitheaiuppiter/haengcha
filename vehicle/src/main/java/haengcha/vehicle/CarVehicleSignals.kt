@@ -12,35 +12,10 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import haengcha.drive.SignalStatus
+import haengcha.drive.VehicleListener
 import haengcha.judge.Gear
 import haengcha.judge.SpeedSample
-
-/** 차량 신호를 받는 쪽. 모든 콜백은 메인 스레드에서 온다. */
-interface VehicleListener {
-    fun onSpeed(sample: SpeedSample)
-    fun onGear(gear: Gear, tNanos: Long)
-    /** [noVideo]는 규제에 영상 금지(UX_RESTRICTIONS_NO_VIDEO)가 들어 있는지. 이때는 움직이는 화면을 멈춘다. */
-    fun onDrivingRestricted(restricted: Boolean, noVideo: Boolean)
-    fun onChargePort(connected: Boolean) {}
-    fun onStatusChanged(statuses: List<SignalStatus>) {}
-    /** 바깥 기온(AAOS, Pleos SDK에는 없음). 눈길 판정에 쓴다. */
-    fun onOutsideTemperature(celsius: Float) {}
-
-    // Pleos Vehicle SDK(PleosVehicleSignals)
-    fun onBatterySoc(percent: Int) {}
-    fun onEvEfficiency(kmPerKwh: Float) {}
-    fun onOdometer(km: Float) {}
-    /** 켜져 있는 경고등 종류 이름(TelltaleType). */
-    fun onTelltales(active: Set<String>) {}
-    fun onEngineOilLow(low: Boolean) {}
-    fun onSeatBelt(buckled: Boolean) {}
-    fun onHeadlights(on: Boolean) {}
-    fun onWiper(on: Boolean) {}
-    fun onSdkStatus(statuses: List<SignalStatus>) {}
-}
-
-/** 신호별 구독 결과. 지원하지 않거나 권한이 없으면 [available]이 false. */
-data class SignalStatus(val name: String, val available: Boolean)
 
 /**
  * AAOS Car API 구독. 차속은 지원 최대 주기로, 나머지는 바뀔 때만 받는다.

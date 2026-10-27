@@ -33,8 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import haengcha.app.DriveUiState
-import haengcha.app.LiveView
+import haengcha.drive.DriveUiState
+import haengcha.drive.LiveView
 import haengcha.judge.LiveTrip
 import haengcha.judge.SegmentMark
 import haengcha.judge.Station

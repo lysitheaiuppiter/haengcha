@@ -55,8 +55,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import haengcha.app.Celebration
-import haengcha.app.DriveUiState
+import haengcha.drive.Celebration
+import haengcha.drive.DriveUiState
 import haengcha.app.R
 import haengcha.judge.Announcements
 import haengcha.judge.GuardianRule

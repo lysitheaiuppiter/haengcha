@@ -22,6 +22,8 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import haengcha.drive.SignalStatus
+import haengcha.drive.VehicleListener
 
 /**
  * Pleos Vehicle SDK 구독. 배터리 잔량·전비·적산거리(검약 행차, 옛길 원정), 경고등·엔진오일(대장간 퀘스트),

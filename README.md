@@ -8,8 +8,8 @@
 
 | 경로 | 내용 |
 |---|---|
-| `app/` | 행차 앱. 수집·판정 연결(`DriveController`), 위치(`LocationSource`), 기록(`TripStore`), 진행 중 주행 일지(`TripJournalFile`), 포그라운드 서비스(`CollectService`), 녹음 음성 안내(`VoiceGuide`), Compose 화면 |
-| `core-judge/` | 판정 엔진(순수 Kotlin). 급가속·급감속, 경험치·레벨, 개근과 보호권, 암행어사 감찰, 지역·단골 등급, 어린이보호구역, 동반자, 검약 행차, 빗길·눈길, 대장간 퀘스트, 옛길 원정, 명소 도착, 역참, 안내 타이밍, 주행 일지 |
+| `app/` | 행차 앱. 주행 엔진을 Android에 잇는 연결 층(`DriveController`: 시계, Handler, 설정·기록·일지, 차량 신호·내비게이션), 위치(`LocationSource`), 기록(`TripStore`), 진행 중 주행 일지(`TripJournalFile`), 포그라운드 서비스(`CollectService`), 녹음 음성 안내(`VoiceGuide`), Compose 화면 |
+| `core-judge/` | 순수 Kotlin. 판정 규칙(`haengcha.judge`: 급가속·급감속, 경험치·레벨, 개근과 보호권, 암행어사 감찰, 지역·단골 등급, 어린이보호구역, 동반자, 검약 행차, 빗길·눈길, 대장간 퀘스트, 옛길 원정, 명소 도착, 역참, 안내 타이밍, 주행 일지)과 주행 엔진(`haengcha.drive`: 신호 → 주행 판단 → 저장 → 안내·축하 연출, 기능별 부품). 가짜 시계와 차량 신호로 주행을 재생하는 통합 테스트가 있다 |
 | `vehicle/` | 수집 계층. AAOS Car API(차속·기어·충전 포트·주행 규제·바깥 기온), Pleos Vehicle SDK(`PleosVehicleSignals`), NaviHelper SDK(`PleosNavi`) |
 | `speedprobe/` | 차속 수신을 재고(`SpeedProbe`), Pleos SDK 값이 나오는지 확인하는(`PleosProbe`) 검증 앱 |
 | `assets3d/models/` | Blender로 만든 3D 모델(glTF) 7종 |

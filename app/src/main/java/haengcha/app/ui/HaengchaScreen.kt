@@ -37,7 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import haengcha.app.DriveUiState
+import haengcha.drive.DriveUiState
 import haengcha.app.R
 import haengcha.judge.JoseonTheme
 import haengcha.judge.Levels

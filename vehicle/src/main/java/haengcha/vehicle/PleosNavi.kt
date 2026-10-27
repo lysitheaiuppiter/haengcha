@@ -15,19 +15,9 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import haengcha.drive.NaviListener
 import haengcha.judge.Destination
 import haengcha.judge.GeoPoint
-
-/** 내비게이션에서 받는 쪽. 모든 콜백은 메인 스레드에서 온다. */
-interface NaviListener {
-    fun onNaviConnected(connected: Boolean) {}
-    /** 안내 중인 목적지. 경로가 없으면 null. */
-    fun onDestination(dest: Destination?) {}
-    /** 다음 회전까지 거리와, 경로 앞에 휴게소·졸음쉼터가 있으면 그곳까지 거리(m). 경로가 없으면 둘 다 null. */
-    fun onTurns(nextTurnM: Double?, restAreaM: Double?) {}
-    /** 내비게이션이 목적지 도착을 알렸다. */
-    fun onArrived(name: String?) {}
-}
 
 /**
  * Pleos NaviHelper SDK 연동. 목적지(도착 스탬프), 회전 안내 TBT(안내 타이밍 조절, 경로 위 휴게소)를 받고,
