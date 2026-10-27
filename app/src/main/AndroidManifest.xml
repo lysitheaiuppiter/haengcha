@@ -21,6 +21,8 @@
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />
         </intent>
+        <!-- 화면 배치: 행차가 가운데 칸에서 열리면 내비게이션을 앞으로 부른다(NaviLayout) -->
+        <package android:name="ai.umos.maps.android.navigation.app" />
     </queries>
 
     <application

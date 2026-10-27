@@ -1,6 +1,7 @@
 package haengcha.judge
 
 import java.time.LocalDate
+import java.time.ZoneId
 import kotlin.math.floor
 
 /** 누적 경험치로 레벨을 정한다. Lv.0에서 시작하고 Lv.n에 필요한 누적 경험치는 50·n·(n+1)이다(임시값). */
@@ -60,8 +61,8 @@ fun DayDriving.isSafe(rule: StreakRule = StreakRule()): Boolean? {
     return harshCount <= floor(distanceKm / 10 * rule.allowedPer10Km).toInt()
 }
 
-/** 개근 기록. [shieldsUsed]는 끊길 날을 개근 보호권으로 이어 간 횟수. */
-data class Streak(val days: Int, val shieldsUsed: Int)
+/** 개근 기록. [shieldsUsed]는 끊길 날을 개근 보호권으로 이어 간 횟수, [best]는 지금까지 가장 길게 이어 간 일수. */
+data class Streak(val days: Int, val shieldsUsed: Int, val best: Int = days)
 
 /**
  * 날짜순으로 정렬한 하루 합계에서 지금 이어지고 있는 안전주행 개근 일수를 센다.
@@ -70,14 +71,16 @@ data class Streak(val days: Int, val shieldsUsed: Int)
 fun streakOf(days: List<DayDriving>, rule: StreakRule = StreakRule(), shields: Int = 0): Streak {
     var streak = 0
     var used = 0
+    var best = 0
     for (day in days.sortedBy { it.date }) {
         when (day.isSafe(rule)) {
             true -> streak++
             false -> if (streak > 0 && used < shields) used++ else streak = 0
             null -> Unit
         }
+        best = maxOf(best, streak)
     }
-    return Streak(streak, used)
+    return Streak(streak, used, best)
 }
 
 fun currentStreak(days: List<DayDriving>, rule: StreakRule = StreakRule()): Int = streakOf(days, rule).days
@@ -113,15 +116,22 @@ data class ProgressSummary(
     val nightTrips: Int = 0,
     val weatherCalmTrips: Int = 0,
     val restCount: Int = 0,
+    val bestStreak: Int = 0,
+    /** 기록한 주행의 누적 거리(km). */
+    val totalKm: Double = 0.0,
+    /** 가진 칭호, 어려운 것부터. 첫째가 대표 칭호다. */
+    val titles: List<Title> = emptyList(),
+    val buddies: Set<Buddy> = emptySet(),
 )
 
-/** [shieldsEarned]는 이 운전자가 대장간 퀘스트로 받은 개근 보호권 수. */
+/** [shieldsEarned]는 이 운전자가 대장간 퀘스트로 받은 개근 보호권 수. [zone]은 요일·시각 칭호를 셀 때 쓴다. */
 fun summarize(
     records: List<TripRecord>,
     today: LocalDate,
     rule: StreakRule = StreakRule(),
     shieldsEarned: Int = 0,
     eco: EcoRule = EcoRule(),
+    zone: ZoneId = ZoneId.systemDefault(),
 ): ProgressSummary {
     val total = records.sumOf { it.xp }
     val level = Levels.levelOf(total)
@@ -134,7 +144,7 @@ fun summarize(
         )
     }
     val streak = streakOf(days, rule, shieldsEarned)
-    return ProgressSummary(
+    val base = ProgressSummary(
         totalXp = total,
         level = level,
         xpToNextLevel = to - total,
@@ -158,7 +168,10 @@ fun summarize(
         nightTrips = records.count { it.night },
         weatherCalmTrips = records.count { it.weatherCalm },
         restCount = records.count { it.rested },
+        bestStreak = streak.best,
+        totalKm = records.sumOf { it.distanceKm },
     )
+    return base.copy(titles = titlesOf(records, base, shieldsEarned, zone), buddies = buddiesOf(base))
 }
 
 /**
@@ -187,8 +200,38 @@ object Announcements {
 
     fun levelUp(level: Int) = "Lv.$level 달성!"
     fun themeUnlocked(theme: JoseonTheme) = "${theme.label} 테마가 열렸습니다."
-    fun regionEntered(region: Region) = "${region.label}에 오셨습니다. ${region.theme} 테마가 켜집니다."
-    fun gradeUp(region: Region, grade: Int) = "단골 등급이 올랐습니다. ${region.grades[grade]}입니다."
+    fun regionEntered(region: Region) =
+        if (region.graded) "${region.label}에 오셨습니다. ${region.theme} 테마가 켜집니다."
+        else "${region.label}에 오셨습니다. ${TOWN_WELCOME[region] ?: "${region.theme}의 고장입니다."}"
+
+    /** 처음 가 본 지역이 도감에 오를 때. */
+    fun regionCollected(region: Region) = "지역 도감에 ${region.label} ${region.theme}${region.theme.josa("이", "가")} 올랐습니다."
+
+    /** 도감 지역은 등급 이름이 같아 지역 이름을 함께 말한다. */
+    fun gradeUp(region: Region, grade: Int) =
+        if (region.graded) "단골 등급이 올랐습니다. ${region.grades[grade]}입니다."
+        else "단골 등급이 올랐습니다. ${region.label} ${region.grades[grade]}입니다."
+
+    fun titleEarned(title: Title) = "새 칭호를 얻었습니다. ${title.label}."
+    fun buddyJoined(buddy: Buddy) = buddy.joinLine
+
+    private val TOWN_WELCOME = mapOf(
+        Region.SEOUL to "한양 도성 행차입니다.",
+        Region.BUSAN to "파도 소리가 반깁니다.",
+        Region.DAEGU to "사과 향이 반깁니다.",
+        Region.INCHEON to "짜장면 냄새가 반깁니다.",
+        Region.GWANGJU to "무등산이 반깁니다.",
+        Region.DAEJEON to "한빛탑이 반깁니다.",
+        Region.GYEONGJU to "천년 고도 행차입니다.",
+        Region.JEONJU to "비빔밥의 고장입니다.",
+        Region.GANGNEUNG to "커피 향이 반깁니다.",
+        Region.JEJU to "돌하르방이 반깁니다.",
+        Region.YEOSU to "밤바다가 반깁니다.",
+        Region.ANDONG to "하회탈이 웃으며 반깁니다.",
+    )
+
+    /** 주차 후 한 번에 말할 새 칭호 수. 나머지는 화면에만 보인다. */
+    const val MAX_TITLE_LINES = 2
     fun questOpened(quest: Quest) = "대장간 퀘스트입니다. ${quest.title}."
     fun stationReached(station: Station) = "옛길 원정, ${station.label}에 이르렀습니다."
     fun stamped(landmark: Landmark) = "${landmark.label} 도착! 스탬프를 찍었습니다."
@@ -202,7 +245,10 @@ object Announcements {
             (1..maxLevel).map(::levelUp) +
             JoseonTheme.entries.filter { it.unlockLevel > 0 }.map(::themeUnlocked) +
             Region.entries.map(::regionEntered) +
+            Region.entries.map(::regionCollected) +
             Region.entries.flatMap { r -> (1..r.grades.lastIndex).map { gradeUp(r, it) } } +
+            Title.entries.map(::titleEarned) +
+            Buddy.entries.map(::buddyJoined) +
             Quest.entries.map(::questOpened) +
             Station.entries.filter { it != Station.HANYANG }.map(::stationReached) +
             Landmark.entries.map(::stamped)
@@ -231,9 +277,10 @@ object Announcements {
         (after.themes - before.themes.toSet()).forEach { add(themeUnlocked(it)) }
         after.regulars.forEach { now ->
             val was = before.regulars.firstOrNull { it.region == now.region }
-            if (was != null && now.grade > was.grade) add(gradeUp(now.region, now.grade))
+            if (was == null) add(regionCollected(now.region)) else if (now.grade > was.grade) add(gradeUp(now.region, now.grade))
         }
-        if (after.companion.joined && !before.companion.joined) add(COMPANION_JOINED)
+        Buddy.entries.filter { it in after.buddies && it !in before.buddies }.forEach { add(buddyJoined(it)) }
+        (after.titles - before.titles.toSet()).take(MAX_TITLE_LINES).forEach { add(titleEarned(it)) }
         add(CLOSING)
     }
 

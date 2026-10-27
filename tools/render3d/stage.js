@@ -1,5 +1,6 @@
 /*
  * 행차 무대: 지금 테마 탈것을 올린 단상과 지역 풍경(궁궐 마당, 울산 밤바다와 고래, 횡성 들판과 한우).
+ * 도감 지역 12곳의 장면은 towns.js에 있고(window.TOWNS), 여기 도우미(window.Stage)를 쓴다.
  * 한 코드로 두 가지를 그린다(tools/render3d/render.mjs가 헤드리스 크롬에서 부른다).
  *  - 정지 그림(window.renderLayer): 탈것 레이어(투명)와 배경 레이어, 도감 아이콘
  *  - 움직이는 배경(window.Anim): 고래가 뛰어오르고, 등대 불빛이 돌고, 반딧불·초롱·별이 일렁이는 루프 영상의 프레임.
@@ -14,6 +15,7 @@
   const MODEL_BASE = window.MODEL_BASE || 'models/';
 
   const YAW = 2.25; // 탈것 앞(glTF -Z)이 화면 왼쪽 앞을 보게
+  const REAR_YAW = 0, REAR_Z = -5.5; // 주행 화면: 탈것 앞이 화면 안쪽을 보게(뒷모습), 단상보다 앞에
   const TOP = 0.35; // 단상 윗면 높이
   const SHORE_Z = -6; // 울산: 이보다 먼 곳은 바다
   // landscape는 왼쪽에 카드가 오므로 탈것을 오른쪽으로, portrait는 위에 카드가 오므로 아래로 민다
@@ -184,7 +186,8 @@
     ring.rotation.x = Math.PI / 2; ring.position.y = TOP; scene.add(ring);
   }
 
-  async function buildVehicle(scene, name) {
+  /** [yaw]는 탈것 앞이 보는 방향(정차 화면은 왼쪽 앞, 주행 화면은 0이면 화면 안쪽), [base]는 바닥 높이(단상 윗면 또는 땅). */
+  async function buildVehicle(scene, name, yaw = YAW, base = TOP) {
     const model = await loadModel(name);
     model.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.envMapIntensity = 0.55; } });
     // 가장 긴 변을 단상 지름(4.0)의 4/5쯤에 맞춘다. 키가 큰 어가 행렬도 화면에 들어오게 높이도 본다
@@ -192,14 +195,14 @@
     const size = box.getSize(new T.Vector3()), center = box.getCenter(new T.Vector3());
     const scale = 3.3 / Math.max(size.x, size.z, size.y * 1.15);
     model.scale.setScalar(scale);
-    model.position.set(-center.x * scale, TOP - box.min.y * scale, -center.z * scale);
+    model.position.set(-center.x * scale, base - box.min.y * scale, -center.z * scale);
     // 바퀴·발 밑에 닿는 그림자(접지감)
     const contact = new T.Mesh(
       new T.PlaneGeometry(size.x * scale * 1.35, size.z * scale * 1.2),
       new T.MeshBasicMaterial({ map: radialTexture([[0, 'rgba(0,0,0,0.4)'], [1, 'rgba(0,0,0,0)']]), transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 }),
     );
-    contact.rotation.x = -Math.PI / 2; contact.position.y = TOP + 0.002;
-    const pivot = new T.Group(); pivot.add(model); pivot.add(contact); pivot.rotation.y = YAW; scene.add(pivot);
+    contact.rotation.x = -Math.PI / 2; contact.position.y = base + 0.002;
+    const pivot = new T.Group(); pivot.add(model); pivot.add(contact); pivot.rotation.y = yaw; scene.add(pivot);
     // 바퀴·발·다리가 단상에 닿는 곳마다 작고 진한 그림자를 둔다(떠 보이지 않게). 단상과 함께 돌도록 pivot에 붙인다
     pivot.updateMatrixWorld(true);
     const blob = radialTexture([[0, 'rgba(0,0,0,0.75)'], [0.5, 'rgba(0,0,0,0.35)'], [1, 'rgba(0,0,0,0)']]);
@@ -210,15 +213,16 @@
       let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity, n = 0;
       for (let i = 0; i < pos.count; i++) {
         v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld);
-        if (v.y > TOP + 0.06) continue;
+        if (v.y > base + 0.06) continue;
         v.applyMatrix4(inv);
         x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); z0 = Math.min(z0, v.z); z1 = Math.max(z1, v.z); n++;
       }
       if (!n) return;
       const pad = 0.28;
       const m = new T.Mesh(new T.PlaneGeometry(x1 - x0 + pad, z1 - z0 + pad), new T.MeshBasicMaterial({ map: blob, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -3 }));
-      m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, TOP + 0.003, (z0 + z1) / 2); pivot.add(m);
+      m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, base + 0.003, (z0 + z1) / 2); pivot.add(m);
     });
+    return pivot;
   }
 
   // ---------------- 궁궐 마당(지역 밖) ----------------
@@ -687,6 +691,22 @@
     return url;
   }
 
+  // 주행 화면 탈것: 단상 없이 땅 위에서 화면 안쪽(배경 지평선의 정면 소실점)으로 달려가는 뒷모습
+  async function renderVehicleRear(name, w, h, layout) {
+    const canvas = document.getElementById('cv'); canvas.width = w; canvas.height = h;
+    const r = makeRenderer(canvas, w, h, 2048);
+    const scene = makeScene(r);
+    const { cam } = makeCamera(w, h, layout);
+    addLights(scene, 2048);
+    shadowGround(scene, 0.5);
+    // 주행 계기판(화면 아래)에 가리지 않게 단상 자리보다 앞으로 낸다(울산 물가 z=-6 바로 앞)
+    (await buildVehicle(scene, name, REAR_YAW, 0)).position.z = REAR_Z;
+    r.render(scene, cam);
+    const url = canvas.toDataURL('image/png');
+    r.dispose();
+    return url;
+  }
+
   async function renderBackground(region, grade, w, h, layout) {
     const wide = layout === 'landscape';
     const canvas = document.getElementById('cv'); canvas.width = w; canvas.height = h;
@@ -704,6 +724,12 @@
       addLights(scene, 2048, 0xffd2a0);
       shadowGround(scene, 0.35);
       await buildField(scene, layout, grade, false);
+    } else if (window.TOWNS[region]) {
+      const town = window.TOWNS[region];
+      town.paint(g, w, h, wide, geo, false);
+      addLights(scene, 2048, town.key);
+      shadowGround(scene, 0.35);
+      await town.build(scene, layout, false, geo);
     } else {
       paintPalace(g, w, h, wide, geo, false);
     }
@@ -775,9 +801,14 @@
     return c.toDataURL('image/png');
   }
 
+  // 도감 지역 장면(towns.js)이 쓰는 도우미
+  window.Stage = { T, mulberry32, fq, radialTexture, sprite, bokeh, starList, drawStars, floorPool, ridge, drawHall, LOOP_SEC };
+  window.TOWNS = window.TOWNS || {};
+
   window.renderLayer = function (opt) {
     if (opt.kind === 'icon') return renderIcon(opt.name, opt.w);
     if (opt.kind === 'appicon') return renderAppIcon(opt.w);
+    if (opt.kind === 'rear') return renderVehicleRear(opt.name, opt.w, opt.h, opt.layout);
     return opt.kind === 'vehicle'
       ? renderVehicle(opt.name, opt.w, opt.h, opt.layout)
       : renderBackground(opt.region, opt.grade || 0, opt.w, opt.h, opt.layout);
@@ -824,6 +855,13 @@
           shadowGround(scene, 0.35);
           updates.push(await buildField(scene, layout, grade, true));
           paintFx = fieldFx(w, h, wide, geo);
+        } else if (window.TOWNS[region]) {
+          const town = window.TOWNS[region];
+          town.paint(g, w, h, wide, geo, true);
+          addLights(scene, 2048, town.key);
+          shadowGround(scene, 0.35);
+          updates.push(await town.build(scene, layout, true, geo));
+          paintFx = town.fx(w, h, wide, geo);
         } else {
           paintPalace(g, w, h, wide, geo, true);
           paintFx = palaceFx(w, h, wide, geo);

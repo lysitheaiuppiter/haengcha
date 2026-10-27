@@ -1,5 +1,6 @@
 package haengcha.drive
 
+import haengcha.judge.Buddy
 import haengcha.judge.JoseonTheme
 import haengcha.judge.JourneyStatus
 import haengcha.judge.Landmark
@@ -10,6 +11,7 @@ import haengcha.judge.Region
 import haengcha.judge.RegularStatus
 import haengcha.judge.SchoolZone
 import haengcha.judge.Station
+import haengcha.judge.Title
 import haengcha.judge.TripRecord
 import haengcha.judge.Weather
 
@@ -54,7 +56,13 @@ data class DriveUiState(
     val missingSdk: List<String> = emptyList(),
     /** 주행 중 화면에 보여 줄 이번 주행(1초마다 갱신). 주행 중이 아니면 null. */
     val live: LiveView? = null,
-)
+    /** 운전자가 고른 동반자. 아직 합류하지 않았으면(이달 거북이가 떠난 경우 등) [buddy]가 대신 고른다. */
+    val chosenBuddy: Buddy? = null,
+) {
+    /** 정차 화면에 함께 있는 동반자. 고른 동반자가 없으면 가장 늦게 열리는 동반자. */
+    val buddy: Buddy?
+        get() = chosenBuddy?.takeIf { it in progress.buddies } ?: Buddy.entries.lastOrNull { it in progress.buddies }
+}
 
 /** 주행 중 화면의 이번 주행: 지금까지 판정, 이번 주행을 더한 옛길 원정, 잠깐 띄우는 알림 띠. */
 data class LiveView(val trip: LiveTrip, val journey: JourneyStatus, val banner: String? = null)
@@ -66,7 +74,8 @@ sealed interface Celebration {
     data class GradeUp(val status: RegularStatus) : Celebration
     data object Mapae : Celebration
     data object Guardian : Celebration
-    data class CompanionJoined(val trips: Int) : Celebration
+    data class BuddyJoined(val buddy: Buddy) : Celebration
+    data class TitleEarned(val title: Title) : Celebration
     data class Eco(val kmPerKwh: Double, val rice: Double) : Celebration
     data class WeatherCalm(val weather: Weather) : Celebration
     data object Rested : Celebration

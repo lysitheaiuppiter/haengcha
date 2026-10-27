@@ -1,6 +1,7 @@
 package haengcha.drive
 
 import haengcha.judge.Announcements
+import haengcha.judge.Buddy
 import haengcha.judge.CompletedTrip
 import haengcha.judge.Destination
 import haengcha.judge.ExtrasMeter
@@ -9,6 +10,7 @@ import haengcha.judge.GeoPoint
 import haengcha.judge.InspectionPlanner
 import haengcha.judge.InspectionRule
 import haengcha.judge.JournalHeader
+import haengcha.judge.Landmark
 import haengcha.judge.QuestChange
 import haengcha.judge.Region
 import haengcha.judge.RestRule
@@ -64,7 +66,7 @@ class DriveEngine(
         DriveUiState(
             summary(records), recent(records),
             profiles = settings.profiles, activeProfile = settings.activeProfile, owned = settings.owned,
-            quests = quests.open, night = scene.night(clock.timeOfDay()),
+            quests = quests.open, night = scene.night(clock.timeOfDay()), chosenBuddy = settings.buddy(settings.activeProfile),
         ),
     )
     val state: StateFlow<DriveUiState> = _state
@@ -133,7 +135,10 @@ class DriveEngine(
         records = store.load()
         announced.clear()
         _state.update {
-            it.copy(progress = summary(records), recentTrips = recent(records), activeProfile = id, celebrations = emptyList())
+            it.copy(
+                progress = summary(records), recentTrips = recent(records), activeProfile = id, celebrations = emptyList(),
+                chosenBuddy = settings.buddy(id),
+            )
         }
         return true
     }
@@ -147,6 +152,13 @@ class DriveEngine(
     fun buy(itemId: String) {
         settings.owned = settings.owned + itemId
         _state.update { it.copy(owned = settings.owned) }
+    }
+
+    /** 정차 화면에 데리고 다닐 동반자를 고른다. 합류한 동반자만 고를 수 있다. */
+    fun chooseBuddy(buddy: Buddy) {
+        if (buddy !in _state.value.progress.buddies) return
+        settings.setBuddy(settings.activeProfile, buddy)
+        _state.update { it.copy(chosenBuddy = buddy) }
     }
 
     fun dismissCelebration() {
@@ -179,6 +191,28 @@ class DriveEngine(
     }
 
     /** 디버그 빌드에서 감찰 규칙을 바꿔 짧은 주행으로 시험할 때 쓴다. */
+    /**
+     * 디버그 빌드 시연용: 지난 전국 유람 기록(도감 지역 6곳, 명소 2곳, 야행 4번)을 넣는다.
+     * 다음 야간 주행에서 부엉이 합류와 '달빛 행차꾼', 울산 주행에서 '팔도 유람객', 명소 도착에서 까치 합류가 보인다.
+     */
+    fun seedTour() {
+        val today = clock.today()
+        val base = clock.nowMs()
+        val tour = listOf(
+            Region.SEOUL to Landmark.GYEONGBOKGUNG, Region.BUSAN to Landmark.HAEUNDAE, Region.GYEONGJU to null,
+            Region.JEONJU to null, Region.GANGNEUNG to null, Region.JEJU to null,
+        )
+        val seeded = tour.mapIndexed { i, (region, stamp) ->
+            val d = i + 3L
+            TripRecord(base - d * DAY_MS, base - d * DAY_MS + 1_800_000, today.minusDays(d), 12.0, 30.0, 10, 0, 0, 4, 1,
+                regions = setOf(region), stamp = stamp, night = i < 4)
+        }
+        seeded.forEach(store::append)
+        records = store.load()
+        _state.update { it.copy(progress = summary(records), recentTrips = recent(records)) }
+        log("시연 유람 기록 추가: ${seeded.size}건")
+    }
+
     fun overrideInspection(rule: InspectionRule) {
         planner.rule = rule
     }
@@ -317,14 +351,20 @@ class DriveEngine(
     /** 퀘스트가 닫히면 보호권 연출과 안내, 열리면 3초 뒤에도 열려 있을 때만 안내한다. */
     private fun onQuestChange(change: QuestChange) {
         log("대장간 퀘스트 열림 ${change.opened}, 마침 ${change.completed}, 짧게 켜졌다 꺼짐 ${change.dropped}")
+        val before = _state.value.progress
+        val after = summary(records)
+        // 보호권을 받으면 대장간 단골 칭호가 열릴 수 있다
+        val extra = newBuddiesAndTitles(before, after)
         _state.update {
             it.copy(
                 quests = quests.open,
-                progress = summary(records),
-                celebrations = it.celebrations + change.completed.map(Celebration::QuestDone),
+                progress = after,
+                celebrations = it.celebrations + change.completed.map(Celebration::QuestDone) + extra,
             )
         }
-        if (change.completed.isNotEmpty()) announceQuest(listOf(Announcements.QUEST_DONE))
+        if (change.completed.isNotEmpty()) {
+            announceQuest(listOf(Announcements.QUEST_DONE) + extra.filterIsInstance<Celebration.TitleEarned>().map { Announcements.titleEarned(it.title) })
+        }
         if (change.opened.isNotEmpty()) {
             scheduler.post(QUEST_CONFIRM_MS) {
                 val still = quests.stillOpen(change.opened)
@@ -482,13 +522,22 @@ class DriveEngine(
         val before = _state.value.progress
         val after = summary(records)
         val celebrations = if (announce) celebrationsFor(trip, record, before, after, guardian) else emptyList()
-        _state.update { it.copy(progress = after, recentTrips = recent(records), celebrations = it.celebrations + celebrations) }
+        // 새로 합류한 동반자는 바로 데리고 다닌다
+        val joined = Buddy.entries.lastOrNull { it in after.buddies && it !in before.buddies }
+        joined?.let { settings.setBuddy(settings.activeProfile, it) }
+        _state.update {
+            it.copy(
+                progress = after, recentTrips = recent(records), celebrations = it.celebrations + celebrations,
+                chosenBuddy = joined ?: it.chosenBuddy,
+            )
+        }
         log("주행 저장 ${record.toCsv()} 감찰=${trip.result.inspection}")
         // 재부팅 뒤 마감한 지난 주행은 조용히 저장만 한다
         if (announce) speak(Announcements.tripEndLines(trip.result, before, after, guardian, record))
     }
 
-    private fun summary(all: List<TripRecord>) = summarize(all, clock.today(), shieldsEarned = settings.shields(settings.activeProfile))
+    private fun summary(all: List<TripRecord>) =
+        summarize(all, clock.today(), shieldsEarned = settings.shields(settings.activeProfile), zone = clock.zone)
 
     private fun currentEpochOffsetMs() = clock.nowMs() - clock.elapsedNanos() / 1_000_000
 

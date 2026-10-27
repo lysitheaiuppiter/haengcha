@@ -33,6 +33,9 @@ import haengcha.drive.VehicleListener
  *
  * 안전띠: 경고등을 읽을 수 있으면 운전석 안전띠 경고등이 꺼져 있을 때 맨 것으로 보고, 못 읽으면 운전석 체결 신호를 쓴다.
  * 에뮬레이터는 체결 신호가 늘 '안 맴'이고 Virtual Console로는 경고등만 바꿀 수 있어서다.
+ *
+ * 처음 읽기 결과가 구독으로 받은 새 값보다 늦게 올 때가 있어(앱 시작 직후), 구독 값을 한 번 받은 항목은
+ * 처음 읽기 결과를 버린다. 그러지 않으면 막 켜진 경고등이 예전 값으로 덮여 퀘스트가 열리자마자 닫힌다.
  */
 class PleosVehicleSignals(private val context: Context) {
 
@@ -41,6 +44,8 @@ class PleosVehicleSignals(private val context: Context) {
     private var listener: VehicleListener? = null
     private val available = linkedMapOf<String, Boolean>()
     private var telltalesReadable = false
+    /** 구독 값을 한 번이라도 받은 항목(메인 스레드에서만 다룬다). */
+    private val live = mutableSetOf<String>()
 
     fun start(listener: VehicleListener) {
         if (vehicle != null) return
@@ -63,8 +68,17 @@ class PleosVehicleSignals(private val context: Context) {
         listener = null
     }
 
-    private fun post(block: VehicleListener.() -> Unit) {
-        handler.post { listener?.block() }
+    /** 처음 읽기 결과. 이미 구독 값을 받았으면 늦게 온 옛 값이라 버린다. */
+    private fun fromGet(item: String, block: VehicleListener.() -> Unit) {
+        handler.post { if (item !in live) listener?.block() }
+    }
+
+    /** 구독으로 받은 값. */
+    private fun fromListener(item: String, block: VehicleListener.() -> Unit) {
+        handler.post {
+            live += item
+            listener?.block()
+        }
     }
 
     private fun mark(item: String, ok: Boolean) = handler.post {
@@ -80,24 +94,24 @@ class PleosVehicleSignals(private val context: Context) {
 
     private fun subscribe(v: Vehicle) {
         val ev = v.getEvBattery()
-        ev.getEvBatteryStateOfCharge({ soc -> mark(SOC, true); soc?.let { post { onBatterySoc(it) } } }, failed(SOC))
+        ev.getEvBatteryStateOfCharge({ soc -> mark(SOC, true); soc?.let { fromGet(SOC) { onBatterySoc(it) } } }, failed(SOC))
         ev.registerEvBatteryStateOfCharge(object : EvBatteryStateOfChargeListener {
-            override fun onEvBatteryStateOfChargeUpdated(value: Int?) { value?.let { post { onBatterySoc(it) } } }
+            override fun onEvBatteryStateOfChargeUpdated(value: Int?) { value?.let { fromListener(SOC) { onBatterySoc(it) } } }
             override fun onFailed(e: Exception) = failed(SOC)(e)
         })
         ev.getCurrentEvEfficiency({ eff ->
             mark(EFFICIENCY, true)
-            eff?.let { post { onEvEfficiency(it) } }
+            eff?.let { fromGet(EFFICIENCY) { onEvEfficiency(it) } }
             ev.registerCurrentEvEfficiency(object : EvBatteryEfficiencyListener {
-                override fun onEvBatteryEfficiencyUpdated(efficiency: Float?) { efficiency?.let { post { onEvEfficiency(it) } } }
+                override fun onEvBatteryEfficiencyUpdated(efficiency: Float?) { efficiency?.let { fromListener(EFFICIENCY) { onEvEfficiency(it) } } }
                 override fun onFailed(e: Exception) = failed(EFFICIENCY)(e)
             })
         }, failed(EFFICIENCY))
 
         val odo = v.getOdometer()
-        odo.getCurrentDistanceDriven({ km -> mark(ODOMETER, true); km?.let { post { onOdometer(it) } } }, failed(ODOMETER))
+        odo.getCurrentDistanceDriven({ km -> mark(ODOMETER, true); km?.let { fromGet(ODOMETER) { onOdometer(it) } } }, failed(ODOMETER))
         odo.registerDistanceDriven(object : DistanceDrivenListener {
-            override fun onDistanceDrivenUpdated(value: Float?) { value?.let { post { onOdometer(it) } } }
+            override fun onDistanceDrivenUpdated(value: Float?) { value?.let { fromListener(ODOMETER) { onOdometer(it) } } }
             override fun onFailed(e: Exception) = failed(ODOMETER)(e)
         })
 
@@ -105,56 +119,57 @@ class PleosVehicleSignals(private val context: Context) {
         safety.getTelltalesInfo({ t ->
             mark(TELLTALES, true)
             telltalesReadable = true
-            onTelltales(t)
+            onTelltales(t, fromListener = false)
         }, failed(TELLTALES))
         safety.registerTelltales(object : TelltaleInfoListener {
-            override fun onTelltaleInfoUpdated(telltales: Telltales?) = onTelltales(telltales)
+            override fun onTelltaleInfoUpdated(telltales: Telltales?) = onTelltales(telltales, fromListener = true)
             override fun onFailed(e: Exception) = failed(TELLTALES)(e)
         })
-        safety.getEngineOilLevelState({ level -> mark(OIL, true); post { onEngineOilLow(level.isLow()) } }, failed(OIL))
+        safety.getEngineOilLevelState({ level -> mark(OIL, true); fromGet(OIL) { onEngineOilLow(level.isLow()) } }, failed(OIL))
         safety.registerEngineOilLevelState(object : OilLevelStateListener {
-            override fun onOilLevelUpdated(level: OilLevelState?) = post { onEngineOilLow(level.isLow()) }
+            override fun onOilLevelUpdated(level: OilLevelState?) = fromListener(OIL) { onEngineOilLow(level.isLow()) }
             override fun onFailed(e: Exception) = failed(OIL)(e)
         })
 
         val driver = SeatArea(SeatValue.ROW_1_LEFT)
         val seat = v.getSeat()
-        seat.getCurrentSeatBeltBuckledState(driver, { b -> mark(BELT, true); onBuckled(b) }, failed(BELT))
+        seat.getCurrentSeatBeltBuckledState(driver, { b -> mark(BELT, true); onBuckled(b, fromListener = false) }, failed(BELT))
         seat.registerSeatBeltBuckledState(driver, object : SeatBeltBuckledStateListener {
-            override fun onSeatBeltBuckledStateUpdated(state: Boolean?) = onBuckled(state)
+            override fun onSeatBeltBuckledStateUpdated(state: Boolean?) = onBuckled(state, fromListener = true)
             override fun onFailed(e: Exception) = failed(BELT)(e)
         })
 
         val light = v.getLight()
-        light.getCurrentLowBeamLightState({ s -> mark(HEADLIGHTS, true); post { onHeadlights(s == LightState.ON) } }, failed(HEADLIGHTS))
+        light.getCurrentLowBeamLightState({ s -> mark(HEADLIGHTS, true); fromGet(HEADLIGHTS) { onHeadlights(s == LightState.ON) } }, failed(HEADLIGHTS))
         light.registerLowBeamLightState(object : LightStateListener {
-            override fun onLightStateUpdated(state: LightState?) = post { onHeadlights(state == LightState.ON) }
+            override fun onLightStateUpdated(state: LightState?) = fromListener(HEADLIGHTS) { onHeadlights(state == LightState.ON) }
             override fun onFailed(e: Exception) = failed(HEADLIGHTS)(e)
         })
 
         val front = WindowArea(WindowValue.FRONT_WINDSHIELD)
         val wiper = v.getWiper()
-        wiper.getCurrentWiperState(front, { s -> mark(WIPER, true); post { onWiper(s == WiperState.ON) } }, failed(WIPER))
+        wiper.getCurrentWiperState(front, { s -> mark(WIPER, true); fromGet(WIPER) { onWiper(s == WiperState.ON) } }, failed(WIPER))
         wiper.registerWiperState(front, object : WiperStateListener {
-            override fun onWiperStateUpdated(state: WiperState?) = post { onWiper(state == WiperState.ON) }
+            override fun onWiperStateUpdated(state: WiperState?) = fromListener(WIPER) { onWiper(state == WiperState.ON) }
             override fun onFailed(e: Exception) = failed(WIPER)(e)
         })
     }
 
-    private fun onTelltales(t: Telltales?) {
+    private fun onTelltales(t: Telltales?, fromListener: Boolean) {
         val active = t?.telltales.orEmpty()
             .filter { it.state == TelltaleState.ON || it.state == TelltaleState.BLINK }
             .mapNotNull { it.type?.name }
             .toSet()
-        post {
+        val deliver: VehicleListener.() -> Unit = {
             onTelltales(active)
             onSeatBelt(SEAT_BELT_TELLTALE !in active)
         }
+        if (fromListener) fromListener(TELLTALES, deliver) else fromGet(TELLTALES, deliver)
     }
 
-    private fun onBuckled(buckled: Boolean?) {
+    private fun onBuckled(buckled: Boolean?, fromListener: Boolean) {
         if (buckled == null || telltalesReadable) return
-        post { onSeatBelt(buckled) }
+        if (fromListener) fromListener(BELT) { onSeatBelt(buckled) } else fromGet(BELT) { onSeatBelt(buckled) }
     }
 
     private fun OilLevelState?.isLow() = this == OilLevelState.LOW || this == OilLevelState.CRITICALLY_LOW

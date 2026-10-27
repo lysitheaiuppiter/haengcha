@@ -1,5 +1,6 @@
 package haengcha.drive
 
+import haengcha.judge.Buddy
 import haengcha.judge.JournalHeader
 import haengcha.judge.JournalState
 import haengcha.judge.Quest
@@ -66,6 +67,9 @@ interface DriveSettings {
     /** 대장간 퀘스트로 받은 개근 보호권 수(쓴 것 포함). */
     fun shields(profileId: String): Int
     fun addShield(profileId: String)
+    /** 운전자가 정차 화면에 데리고 다니는 주행 보상 동반자. */
+    fun buddy(profileId: String): Buddy?
+    fun setBuddy(profileId: String, buddy: Buddy)
     /** 열려 있는 대장간 퀘스트와 연 시각(ms). */
     var openQuests: Map<Quest, Long>
     /** 역참 연속 운전 상태([haengcha.judge.RestTracker.encode]). */

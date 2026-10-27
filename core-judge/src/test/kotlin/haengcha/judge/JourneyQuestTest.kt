@@ -68,7 +68,7 @@ class JourneyQuestTest {
     @Test
     fun `보호권이 있으면 끊길 날을 넘기고 이어 간다`() {
         val days = listOf(day(0), day(1), day(2, harsh = 3), day(3))
-        assertEquals(Streak(1, 0), streakOf(days))
+        assertEquals(Streak(1, 0, best = 2), streakOf(days))
         assertEquals(Streak(3, 1), streakOf(days, shields = 1))
         // 기록이 없을 때(0일) 끊긴 날에는 보호권을 쓰지 않는다
         assertEquals(Streak(1, 0), streakOf(listOf(day(0, harsh = 3), day(1)), shields = 1))

@@ -19,7 +19,8 @@ class PlacesTest {
         assertTrue(Region.ULSAN.center.distanceKm(Region.HOENGSEONG.center) in 240.0..255.0)
         assertEquals(Region.ULSAN, Region.at(GeoPoint(35.55, 129.30)))
         assertEquals(Region.HOENGSEONG, Region.at(GeoPoint(37.49, 127.99)))
-        assertNull(Region.at(GeoPoint(37.5665, 126.9780))) // 서울은 제출 범위 밖
+        assertEquals(Region.SEOUL, Region.at(GeoPoint(37.5665, 126.9780)))
+        assertNull(Region.at(GeoPoint(37.2636, 127.0286))) // 수원은 도감에 없다
     }
 
     @Test

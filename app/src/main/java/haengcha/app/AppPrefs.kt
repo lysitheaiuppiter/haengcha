@@ -3,6 +3,7 @@ package haengcha.app
 import android.content.Context
 import haengcha.drive.DriveSettings
 import haengcha.drive.Profile
+import haengcha.judge.Buddy
 import haengcha.judge.Quest
 
 /**
@@ -40,6 +41,11 @@ class AppPrefs(context: Context) : DriveSettings {
 
     override fun addShield(profileId: String) = sp.edit().putInt(KEY_SHIELDS + profileId, shields(profileId) + 1).apply()
 
+    override fun buddy(profileId: String): Buddy? =
+        sp.getString(KEY_BUDDY + profileId, null)?.let { runCatching { Buddy.valueOf(it) }.getOrNull() }
+
+    override fun setBuddy(profileId: String, buddy: Buddy) = sp.edit().putString(KEY_BUDDY + profileId, buddy.name).apply()
+
     /** 열려 있는 대장간 퀘스트와 연 시각(ms). */
     override var openQuests: Map<Quest, Long>
         get() = sp.getStringSet(KEY_QUESTS, emptySet()).orEmpty().mapNotNull { e ->
@@ -48,6 +54,11 @@ class AppPrefs(context: Context) : DriveSettings {
         }.toMap()
         set(value) = sp.edit().putStringSet(KEY_QUESTS, value.map { (q, t) -> "${q.name}:$t" }.toSet()).apply()
 
+    /** 행차를 오른쪽 칸에 두고 내비게이션을 가운데에 둔다(기본값). 차량에 딸린 설정이라 운전자와 상관없이 하나다. */
+    var naviCenter: Boolean
+        get() = sp.getBoolean(KEY_NAVI_CENTER, true)
+        set(value) = sp.edit().putBoolean(KEY_NAVI_CENTER, value).apply()
+
     /** 역참 연속 운전 상태([haengcha.judge.RestTracker.encode]). */
     override var restState: String?
         get() = sp.getString(KEY_REST, null)
@@ -55,8 +66,10 @@ class AppPrefs(context: Context) : DriveSettings {
 
     companion object {
         private const val KEY_SHIELDS = "shields_"
+        private const val KEY_BUDDY = "buddy_"
         private const val KEY_QUESTS = "open_quests"
         private const val KEY_REST = "rest_state"
+        private const val KEY_NAVI_CENTER = "navi_center"
         private const val KEY_PROFILES = "profiles"
         private const val KEY_ACTIVE = "active_profile"
         private const val KEY_OWNED = "owned_collab"

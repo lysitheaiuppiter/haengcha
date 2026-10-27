@@ -15,3 +15,5 @@ build/
 /tools/render3d/node_modules/
 # 제출용 소스 압축본(만드는 법은 docs/plans 계획 문서 6장)
 /docs/submission/*.zip
+# 심사용 안내문 PDF(docs/submission/haengcha-demo-guide.md에서 만든다)
+/docs/submission/*.pdf

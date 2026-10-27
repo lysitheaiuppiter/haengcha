@@ -54,7 +54,7 @@ internal fun DrivingScreen(state: DriveUiState) {
     val p = state.progress
     val live = state.live
     Box(Modifier.fillMaxSize()) {
-        if (state.night) LanternProcession(paused = state.noVideo)
+        if (state.night) LanternProcession(paused = state.noVideo, shoreZ = state.region?.seaFrontZ)
         BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 36.dp)) {
             val wide = maxWidth > maxHeight && maxWidth >= 900.dp
             Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -74,6 +74,7 @@ private fun TopLine(state: DriveUiState) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             buildString {
+                state.buddy?.let { append("${it.emoji} ") }
                 append("${p.themes.last().label} 행차")
                 state.region?.let { append(" · ${it.label} ${it.theme}") }
             },

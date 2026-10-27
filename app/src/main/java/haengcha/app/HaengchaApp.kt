@@ -13,14 +13,17 @@ class HaengchaApp : Application() {
 
     lateinit var drive: DriveController
         private set
+    lateinit var prefs: AppPrefs
+        private set
 
     override fun onCreate() {
         super.onCreate()
         val voice = VoiceGuide(this).also { it.start() }
         // 부팅 횟수로 같은 부팅인지 가린다(주행 일지의 시각이 부팅 기준이다)
         val bootId = Settings.Global.getInt(contentResolver, Settings.Global.BOOT_COUNT, -1).toString()
+        prefs = AppPrefs(this)
         drive = DriveController(
-            AppPrefs(this),
+            prefs,
             { id -> TripStore(File(filesDir, AppPrefs.tripsFile(id))) },
             TripJournalFile(File(filesDir, "trip_journal.csv")),
             bootId,

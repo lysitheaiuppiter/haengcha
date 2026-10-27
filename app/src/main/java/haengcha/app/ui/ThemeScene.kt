@@ -33,19 +33,22 @@ import org.json.JSONObject
  * 정차·주행 화면 배경. 세 겹을 같은 비율·같은 정렬로 겹친다.
  * 1. 움직이는 배경(assets/motion/bg_*.mp4): 고래가 뛰어오르고 등대 불빛이 도는 11초 루프 영상. [paused]면 멈춘 한 프레임
  * 2. 정지 배경(assets/scenes/bg_*.webp): 영상이 뜨기 전에 보이다가 영상이 그려지면 서서히 사라진다. 재생에 실패하면 남는다
- * 3. 탈것 레이어(assets/scenes/vehicle_<테마>.webp): 단상 위 지금 테마 탈것(투명 배경)
+ * 3. 탈것 레이어(assets/scenes/vehicle_<테마>.webp): 단상 위 지금 테마 탈것(투명 배경).
+ *    [rear](주행 중)면 vehicle_<테마>_rear.webp: 단상 없이 배경 지평선의 정면 소실점으로 달려가는 뒷모습
  * 배경은 지역 밖이면 궁궐 마당, 울산이면 밤바다와 고래, 횡성이면 들판과 한우이고 고래 빛깔·한우 메달은 단골 등급([grade])을 따른다.
+ * 도감 지역 12곳은 지역마다 상징 모형을 세운 장면 하나를 쓴다.
  * 그림과 영상은 tools/render3d로 Blender 모델을 three.js에서 렌더한 것이다. landscape는 탈것이 오른쪽(왼쪽은 카드 자리),
  * portrait는 아래쪽에 있다.
  */
 @Composable
-fun ThemeScene(theme: JoseonTheme, region: Region?, grade: Int, paused: Boolean, modifier: Modifier = Modifier) {
+fun ThemeScene(theme: JoseonTheme, region: Region?, grade: Int, paused: Boolean, rear: Boolean = false, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier.fillMaxSize()) {
         val portrait = maxWidth < maxHeight
         val suffix = if (portrait) "_portrait" else ""
         // 화면 비율이 그림과 달라 잘릴 때도 탈것이 남도록 탈것 쪽에 붙인다
         val align = if (portrait) Alignment.BottomCenter else Alignment.CenterEnd
-        val bg = "bg_" + (region?.let { "${it.name.lowercase()}_$grade" } ?: "palace") + suffix
+        // 울산·횡성은 단골 등급마다, 도감 지역은 지역마다 장면이 하나다
+        val bg = "bg_" + (region?.let { if (it.graded) "${it.name.lowercase()}_$grade" else it.name.lowercase() } ?: "palace") + suffix
         var playing by remember(bg) { mutableStateOf(false) }
         val stillAlpha by animateFloatAsState(if (playing) 0f else 1f, tween(600), label = "still")
 
@@ -59,7 +62,8 @@ fun ThemeScene(theme: JoseonTheme, region: Region?, grade: Int, paused: Boolean,
                 Image(it, region?.let { r -> "${r.label} ${r.theme} 테마" }, Modifier.fillMaxSize(), align, ContentScale.Crop, stillAlpha)
             }
         }
-        assetBitmap("scenes/vehicle_${theme.name.lowercase()}$suffix.webp")?.let {
+        // 주행 중에는 단상 없이 화면 안쪽으로 달려가는 뒷모습
+        assetBitmap("scenes/vehicle_${theme.name.lowercase()}${if (rear) "_rear" else ""}$suffix.webp")?.let {
             Image(it, "${theme.label} 단상", Modifier.fillMaxSize(), align, ContentScale.Crop)
         }
     }

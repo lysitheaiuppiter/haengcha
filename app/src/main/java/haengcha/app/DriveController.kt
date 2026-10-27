@@ -7,6 +7,7 @@ import android.util.Log
 import haengcha.drive.Clock
 import haengcha.drive.DriveEngine
 import haengcha.drive.DriveUiState
+import haengcha.judge.Buddy
 import haengcha.judge.GeoPoint
 import haengcha.judge.InspectionRule
 import haengcha.judge.Region
@@ -71,6 +72,8 @@ class DriveController(
 
     fun buy(itemId: String) = engine.buy(itemId)
 
+    fun chooseBuddy(buddy: Buddy) = engine.chooseBuddy(buddy)
+
     fun dismissCelebration() = engine.dismissCelebration()
 
     // 디버그 빌드 시연 도구(DebugReceiver)
@@ -78,6 +81,8 @@ class DriveController(
     fun onChargePort(connected: Boolean) = engine.onChargePort(connected)
 
     fun seedDemo(region: Region?, days: Int, monthTrips: Int, journeyKm: Double = 0.0) = engine.seedDemo(region, days, monthTrips, journeyKm)
+
+    fun seedTour() = engine.seedTour()
 
     fun overrideInspection(rule: InspectionRule) = engine.overrideInspection(rule)
 

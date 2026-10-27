@@ -57,8 +57,11 @@ object Wav {
      * 같은 형식의 WAV들을 하나로 잇고 맨 앞에만 [silenceMs] 묵음을 넣는다.
      * 한 번에 이어 말하는 안내에는 문장 사이에 묵음을 더 넣지 않는다(Pleos 선행 묵음 가이드). 형식이 다르면 null.
      */
-    fun concatWithLeadingSilence(wavs: List<ByteArray>, silenceMs: Int): ByteArray? {
-        val parts = wavs.map { parse(it) ?: return null }
+    fun concatWithLeadingSilence(wavs: List<ByteArray>, silenceMs: Int): ByteArray? =
+        concat(wavs.map { parse(it) ?: return null }, silenceMs)
+
+    /** 같은 형식의 PCM들을 이어 맨 앞에만 [silenceMs] 묵음을 넣은 WAV. 형식이 다르면 null. */
+    fun concat(parts: List<Pcm>, silenceMs: Int): ByteArray? {
         val first = parts.firstOrNull() ?: return null
         if (parts.any { !it.sameFormat(first) }) return null
         val silence = ByteArray(first.sampleRate * silenceMs / 1000 * first.blockAlign)

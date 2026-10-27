@@ -3,6 +3,7 @@ package haengcha.app.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -35,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import haengcha.drive.DriveUiState
@@ -44,6 +46,7 @@ import haengcha.judge.Levels
 import haengcha.judge.ProgressSummary
 import haengcha.judge.Region
 import haengcha.judge.RegularStatus
+import haengcha.judge.Title
 import haengcha.judge.TripRecord
 import java.util.Locale
 
@@ -81,7 +84,7 @@ fun HaengchaScreen(state: DriveUiState, actions: ScreenActions) {
         // 움직이는 배경은 정차·주행 화면이 함께 쓴다(화면을 바꿔도 영상을 다시 열지 않게 여기 둔다)
         val p = state.progress
         Box(Modifier.fillMaxSize()) {
-            ThemeScene(p.themes.last(), state.region, p.gradeIn(state.region), paused = state.noVideo)
+            ThemeScene(p.themes.last(), state.region, p.gradeIn(state.region), paused = state.noVideo, rear = state.restricted)
             AtmosphereOverlay(state.night, state.weather, paused = state.noVideo)
             if (state.restricted) DrivingScreen(state) else ParkedScreen(state, actions)
         }
@@ -121,21 +124,35 @@ private fun ParkedScreen(state: DriveUiState, actions: ScreenActions) {
                 if (wide) Modifier.width(460.dp) else Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                ThemeBadge(theme)
+                // 한 칸(portrait)에서는 메뉴가 테마 표시와 겹치지 않게 맨 위 줄에 둔다
+                if (!wide) MenuChips(state, onOpen = { panel = it })
+                ThemeBadge(theme, p.titles.firstOrNull())
                 LevelCard(p)
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     SmallCard("오늘", "${p.todayXp}XP", "개근 ${p.streak}일" + if (p.shields > 0) " · 보호권 ${p.shields}" else "", Modifier.weight(1f))
                     SmallCard("마패", "${p.mapaeCount}개", "암행어사 출두", Modifier.weight(1f))
                 }
-                if (state.quests.isNotEmpty()) QuestCard(state)
-                if (state.restDue && !state.inTrip) RestCard(state.restLeftMin)
-                // 지금 있는 지역, 아니면 최근에 간 지역의 단골 기록
-                (state.region ?: p.regulars.firstOrNull()?.region)?.let { region ->
-                    RegionCard(region, p.regulars.firstOrNull { it.region == region }, here = region == state.region)
+                // 알림 카드: 퀘스트 > 휴식 > 단골 순. 한 칸에서는 탈것을 가리지 않게 가장 앞선 한 장만 둔다
+                val region = state.region ?: p.regulars.firstOrNull()?.region
+                val notices = buildList {
+                    if (state.quests.isNotEmpty()) add(Notice.QUEST)
+                    if (state.restDue && !state.inTrip) add(Notice.REST)
+                    if (region != null) add(Notice.REGION)
+                }
+                (if (wide) notices else notices.take(1)).forEach { n ->
+                    when (n) {
+                        Notice.QUEST -> QuestCard(state)
+                        Notice.REST -> RestCard(state.restLeftMin)
+                        Notice.REGION -> region?.let { r -> RegionCard(r, p.regulars.firstOrNull { it.region == r }, here = r == state.region) }
+                    }
                 }
                 StatusLine(state, actions.requestPermission)
             }
-            MenuChips(state, onOpen = { panel = it }, modifier = Modifier.align(Alignment.TopEnd))
+            if (wide) MenuChips(state, onOpen = { panel = it }, modifier = Modifier.align(Alignment.TopEnd))
+            // 동반자는 탈것 옆, 아래 띠 위에 둔다
+            state.buddy?.let { b ->
+                BuddyFloat(b, Modifier.align(Alignment.BottomEnd).padding(bottom = 130.dp).widthIn(max = if (wide) 420.dp else 320.dp).clickable { panel = PanelKind.COMPANION })
+            }
             BottomBar(
                 p,
                 state.recentTrips.firstOrNull(),
@@ -149,7 +166,7 @@ private fun ParkedScreen(state: DriveUiState, actions: ScreenActions) {
                 onClose = { panel = null },
             ) { DogamContent(p) }
             PanelKind.JOURNEY -> PanelOverlay("옛길 원정", "영남대로 · 한양에서 동래까지", onClose = { panel = null }) { JourneyContent(state) }
-            PanelKind.COMPANION -> PanelOverlay("동반자", null, onClose = { panel = null }) { CompanionContent(state) }
+            PanelKind.COMPANION -> PanelOverlay("동반자", null, onClose = { panel = null }) { CompanionContent(state, actions.chooseBuddy) }
             PanelKind.SHOP -> PanelOverlay("콜라보 동반자 상점", "시연용", onClose = { panel = null }) { ShopContent(state, actions.buy) }
             PanelKind.PROFILE -> PanelOverlay("운전자", null, onClose = { panel = null }) { ProfileContent(state, actions) }
             null -> Unit
@@ -158,18 +175,36 @@ private fun ParkedScreen(state: DriveUiState, actions: ScreenActions) {
     }
 }
 
+/** 정차 화면 알림 카드 종류(앞선 것이 먼저). */
+private enum class Notice { QUEST, REST, REGION }
+
 internal fun Modifier.glass() = this
     .background(Glass, RoundedCornerShape(20.dp))
     .border(1.dp, GlassLine, RoundedCornerShape(20.dp))
 
+/** 지금 테마와 대표 칭호(가진 칭호 가운데 가장 어려운 것). */
 @Composable
-private fun ThemeBadge(theme: JoseonTheme) {
-    Text(
-        "지금 테마 · ${theme.label}",
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.glass().padding(horizontal = 24.dp, vertical = 12.dp),
-    )
+private fun ThemeBadge(theme: JoseonTheme, title: Title?) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            "지금 테마 · ${theme.label}",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            modifier = Modifier.glass().padding(horizontal = 24.dp, vertical = 12.dp),
+        )
+        title?.let {
+            Text(
+                "${it.emoji} ${it.label}",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Gold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false).glass().padding(horizontal = 20.dp, vertical = 12.dp),
+            )
+        }
+    }
 }
 
 @Composable
@@ -195,13 +230,7 @@ private fun SmallCard(label: String, value: String, note: String, modifier: Modi
     }
 }
 
-internal val Region.icon
-    get() = when (this) {
-        Region.ULSAN -> R.drawable.region_whale
-        Region.HOENGSEONG -> R.drawable.region_hanwoo
-    }
-
-/** 지역 테마와 단골 등급(기획서 4.3). 지역 진입 연출은 정차 후 이 카드로 보여 준다. */
+/** 지역 테마(도감 지역)와 단골 등급(기획서 4.3). 지역 진입 연출은 정차 후 이 카드로 보여 준다. */
 @Composable
 private fun RegionCard(region: Region, status: RegularStatus?, here: Boolean) {
     Row(
@@ -209,9 +238,9 @@ private fun RegionCard(region: Region, status: RegularStatus?, here: Boolean) {
         horizontalArrangement = Arrangement.spacedBy(20.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Image(painterResource(region.icon), null, Modifier.size(88.dp))
+        RegionEmblem(region, 88.dp)
         Column {
-            Text("${if (here) "지금" else "최근"} ${region.label} · ${region.theme} 테마", fontSize = 20.sp, color = Muted)
+            Text("${if (here) "지금" else "최근"} ${region.label} · ${region.theme}${if (region.graded) " 테마" else ""}", fontSize = 20.sp, color = Muted)
             Text(status?.let { "${it.gradeLabel} 단골" } ?: "첫 행차 전", fontSize = 32.sp, fontWeight = FontWeight.Bold)
             Text(
                 when {

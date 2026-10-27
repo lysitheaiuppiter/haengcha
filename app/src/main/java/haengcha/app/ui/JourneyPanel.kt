@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -65,18 +67,17 @@ internal fun ColumnScope.JourneyContent(state: DriveUiState) {
         fontWeight = FontWeight.Bold,
     )
 
-    Text("명소 스탬프", fontSize = 20.sp, color = Muted, fontWeight = FontWeight.SemiBold)
-    Text("내비게이션 목적지로 명소에 도착하면 스탬프를 찍습니다. 처음 찍으면 보너스 경험치를 드립니다.", fontSize = 18.sp, color = Muted)
-    Region.entries.forEach { region ->
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Landmark.entries.filter { it.region == region }.forEach { l ->
-                val got = l in p.stamps
-                Column(Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(Color(0x1FF5F1E8)).padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Emoji("🏮", 40, Modifier.alpha(if (got) 1f else 0.25f))
-                    Text(l.label, fontSize = 19.sp, fontWeight = FontWeight.Bold)
-                    Text(if (got) "스탬프 찍음" else "${region.label} 명소", fontSize = 16.sp, color = if (got) Gold else Muted)
-                }
-            }
+    Text("명소 스탬프 ${p.stamps.size}/${Landmark.entries.size}", fontSize = 20.sp, color = Muted, fontWeight = FontWeight.SemiBold)
+    Text("내비게이션 목적지로 명소에 도착하면 스탬프를 찍습니다. 처음 찍으면 보너스 경험치를, 한 지역을 모두 돌면 '명소 완주' 칭호를 드립니다.", fontSize = 18.sp, color = Muted)
+    // 찍은 스탬프가 있는 지역부터, 지역 안에서는 정해 둔 순서대로
+    val order = Region.entries.sortedByDescending { r -> p.stamps.count { it.region == r } }
+    TileGrid(Landmark.entries.sortedBy { order.indexOf(it.region) }, minTile = 200.dp, maxColumns = 5) { l, m ->
+        val got = l in p.stamps
+        Column(m.clip(RoundedCornerShape(16.dp)).background(Color(0x1FF5F1E8)).padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Emoji(if (got) "🏮" else l.region.emblem, 36, Modifier.alpha(if (got) 1f else 0.3f))
+            // 좁은 칸에서는 낱말 단위로 줄을 바꾼다("장생포 / 고래문화마을")
+            Text(l.label, fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, style = TextStyle(lineBreak = LineBreak.Heading))
+            Text(if (got) "스탬프 찍음" else "${l.region.label} 명소", fontSize = 15.sp, color = if (got) Gold else Muted)
         }
     }
 

@@ -1,7 +1,7 @@
 package haengcha.judge
 
 /**
- * 스탬프 투어 명소(기획서 4.9). 제출 범위는 울산·횡성이다.
+ * 스탬프 투어 명소(기획서 4.9). 지역마다 2~4곳이다.
  * 좌표를 따로 두지 않고 내비게이션 목적지 이름으로 알아본다. 이름에 [keywords] 중 하나가 들어 있으면(띄어쓰기 무시) 그 명소다.
  */
 enum class Landmark(val label: String, val region: Region, val keywords: List<String>) {
@@ -11,7 +11,31 @@ enum class Landmark(val label: String, val region: Region, val keywords: List<St
     GANJEOLGOT("간절곶", Region.ULSAN, listOf("간절곶")),
     HOENGSEONG_LAKE("횡성호수길", Region.HOENGSEONG, listOf("횡성호수길")),
     PUNGSUWON("풍수원성당", Region.HOENGSEONG, listOf("풍수원")),
-    BIRCH_FOREST("미술관 자작나무숲", Region.HOENGSEONG, listOf("자작나무숲"));
+    BIRCH_FOREST("미술관 자작나무숲", Region.HOENGSEONG, listOf("자작나무숲")),
+    GYEONGBOKGUNG("경복궁", Region.SEOUL, listOf("경복궁")),
+    N_SEOUL_TOWER("N서울타워", Region.SEOUL, listOf("서울타워", "남산타워")),
+    HAEUNDAE("해운대", Region.BUSAN, listOf("해운대")),
+    GAMCHEON("감천문화마을", Region.BUSAN, listOf("감천문화마을")),
+    KIM_KWANGSEOK("김광석다시그리기길", Region.DAEGU, listOf("김광석")),
+    SEOMUN("서문시장", Region.DAEGU, listOf("서문시장")),
+    WOLMIDO("월미도", Region.INCHEON, listOf("월미도")),
+    CHINATOWN("인천 차이나타운", Region.INCHEON, listOf("차이나타운")),
+    MUDEUNGSAN("무등산", Region.GWANGJU, listOf("무등산")),
+    YANGNIM("양림동 역사문화마을", Region.GWANGJU, listOf("양림")),
+    HANBIT_TOWER("한빛탑", Region.DAEJEON, listOf("한빛탑", "엑스포과학공원")),
+    SUNGSIMDANG("성심당", Region.DAEJEON, listOf("성심당")),
+    BULGUKSA("불국사", Region.GYEONGJU, listOf("불국사")),
+    CHEOMSEONGDAE("첨성대", Region.GYEONGJU, listOf("첨성대")),
+    JEONJU_HANOK("전주한옥마을", Region.JEONJU, listOf("전주한옥마을")),
+    GYEONGGIJEON("경기전", Region.JEONJU, listOf("경기전")),
+    GYEONGPO("경포대", Region.GANGNEUNG, listOf("경포")),
+    ANMOK("안목해변", Region.GANGNEUNG, listOf("안목")),
+    SEONGSAN("성산일출봉", Region.JEJU, listOf("성산일출봉")),
+    HALLASAN("한라산", Region.JEJU, listOf("한라산")),
+    ODONGDO("오동도", Region.YEOSU, listOf("오동도")),
+    YI_SUNSIN_SQUARE("이순신광장", Region.YEOSU, listOf("이순신광장")),
+    HAHOE("하회마을", Region.ANDONG, listOf("하회마을")),
+    WOLYEONGGYO("월영교", Region.ANDONG, listOf("월영교"));
 
     companion object {
         fun match(name: String?): Landmark? {

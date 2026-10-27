@@ -1,75 +1,217 @@
-주상전하 납시오!	boarding.wav
-암행어사 출두요! 아까 10분, 차분히 잘 달리셨습니다. 마패를 하사합니다.	mapae.wav
-오늘도 안전하게, 행차하셨습니다.	closing.wav
-Lv.1 달성!	level_1.wav
-Lv.2 달성!	level_2.wav
-Lv.3 달성!	level_3.wav
-Lv.4 달성!	level_4.wav
-Lv.5 달성!	level_5.wav
-Lv.6 달성!	level_6.wav
-Lv.7 달성!	level_7.wav
-Lv.8 달성!	level_8.wav
-Lv.9 달성!	level_9.wav
-Lv.10 달성!	level_10.wav
-Lv.11 달성!	level_11.wav
-Lv.12 달성!	level_12.wav
-Lv.13 달성!	level_13.wav
-Lv.14 달성!	level_14.wav
-Lv.15 달성!	level_15.wav
-Lv.16 달성!	level_16.wav
-Lv.17 달성!	level_17.wav
-Lv.18 달성!	level_18.wav
-Lv.19 달성!	level_19.wav
-Lv.20 달성!	level_20.wav
-인력거 테마가 열렸습니다.	theme_1.wav
-가마 테마가 열렸습니다.	theme_2.wav
-꽃가마 테마가 열렸습니다.	theme_3.wav
-어가 행렬 테마가 열렸습니다.	theme_4.wav
-어린이보호구역입니다. 천천히!	school_zone.wav
-아이 지킴이! 어린이보호구역을 천천히 지나셨습니다.	guardian.wav
-쉬어가는 행차입니다. 오늘 모은 도감을 정리해 볼까요?	charging.wav
-이달의 동반자 거북이가 행차에 합류했습니다.	companion.wav
-울산에 오셨습니다. 고래 테마가 켜집니다.	region_ulsan.wav
-횡성에 오셨습니다. 한우 테마가 켜집니다.	region_hoengseong.wav
-단골 등급이 올랐습니다. 동 고래입니다.	grade_ulsan_1.wav
-단골 등급이 올랐습니다. 은 고래입니다.	grade_ulsan_2.wav
-단골 등급이 올랐습니다. 금 고래입니다.	grade_ulsan_3.wav
-단골 등급이 올랐습니다. 플래티넘 고래입니다.	grade_ulsan_4.wav
-단골 등급이 올랐습니다. 2등급 한우입니다.	grade_hoengseong_1.wav
-단골 등급이 올랐습니다. 1등급 한우입니다.	grade_hoengseong_2.wav
-단골 등급이 올랐습니다. 1+ 한우입니다.	grade_hoengseong_3.wav
-단골 등급이 올랐습니다. 투뿔(1++) 한우입니다.	grade_hoengseong_4.wav
-검약 행차! 아낀 기운이 곳간에 쌀로 쌓였습니다.	eco.wav
-빗길을 차분히 달리셨습니다.	rain_calm.wav
-눈길을 차분히 달리셨습니다.	snow_calm.wav
-야행을 나섭니다. 초롱을 밝힙니다.	night.wav
-안전띠를 매셔야 개근으로 셉니다.	belt.wav
-오래 달리셨습니다. 역마를 갈아탈 때입니다. 쉬어 가세요.	rest_due.wav
-앞길에 휴게소가 있습니다.	rest_area_ahead.wav
-가까운 휴게소를 내비게이션에 띄웠습니다.	rest_search.wav
-역참에서 잘 쉬셨습니다. 다시 길을 나섭니다.	rested.wav
-개근 보호권으로 개근 기록을 지켰습니다.	shield_used.wav
-정비를 마쳤습니다. 개근 보호권을 드립니다.	quest_done.wav
-대장간 퀘스트입니다. 말편자를 갈 때입니다.	quest_tire.wav
-대장간 퀘스트입니다. 굴대에 기름칠할 때입니다.	quest_oil.wav
-옛길 원정, 판교에 이르렀습니다.	station_pangyo.wav
-옛길 원정, 용인에 이르렀습니다.	station_yongin.wav
-옛길 원정, 양지에 이르렀습니다.	station_yangji.wav
-옛길 원정, 죽산에 이르렀습니다.	station_juksan.wav
-옛길 원정, 충주에 이르렀습니다.	station_chungju.wav
-옛길 원정, 문경새재 조령관에 이르렀습니다.	station_joryeong.wav
-옛길 원정, 유곡에 이르렀습니다.	station_yugok.wav
-옛길 원정, 낙동나루에 이르렀습니다.	station_nakdong.wav
-옛길 원정, 선산에 이르렀습니다.	station_seonsan.wav
-옛길 원정, 대구 경상감영에 이르렀습니다.	station_daegu.wav
-옛길 원정, 청도에 이르렀습니다.	station_cheongdo.wav
-옛길 원정, 밀양 영남루에 이르렀습니다.	station_miryang.wav
-옛길 원정, 양산에 이르렀습니다.	station_yangsan.wav
-옛길 원정, 동래에 이르렀습니다.	station_dongnae.wav
-대왕암공원 도착! 스탬프를 찍었습니다.	stamp_daewangam.wav
-장생포 고래문화마을 도착! 스탬프를 찍었습니다.	stamp_jangsaengpo.wav
-태화강 국가정원 도착! 스탬프를 찍었습니다.	stamp_taehwagang.wav
-간절곶 도착! 스탬프를 찍었습니다.	stamp_ganjeolgot.wav
-횡성호수길 도착! 스탬프를 찍었습니다.	stamp_hoengseong_lake.wav
-풍수원성당 도착! 스탬프를 찍었습니다.	stamp_pungsuwon.wav
-미술관 자작나무숲 도착! 스탬프를 찍었습니다.	stamp_birch_forest.wav
+주상전하 납시오!	boarding.ogg
+암행어사 출두요! 아까 10분, 차분히 잘 달리셨습니다. 마패를 하사합니다.	mapae.ogg
+오늘도 안전하게, 행차하셨습니다.	closing.ogg
+Lv.1 달성!	level_1.ogg
+Lv.2 달성!	level_2.ogg
+Lv.3 달성!	level_3.ogg
+Lv.4 달성!	level_4.ogg
+Lv.5 달성!	level_5.ogg
+Lv.6 달성!	level_6.ogg
+Lv.7 달성!	level_7.ogg
+Lv.8 달성!	level_8.ogg
+Lv.9 달성!	level_9.ogg
+Lv.10 달성!	level_10.ogg
+Lv.11 달성!	level_11.ogg
+Lv.12 달성!	level_12.ogg
+Lv.13 달성!	level_13.ogg
+Lv.14 달성!	level_14.ogg
+Lv.15 달성!	level_15.ogg
+Lv.16 달성!	level_16.ogg
+Lv.17 달성!	level_17.ogg
+Lv.18 달성!	level_18.ogg
+Lv.19 달성!	level_19.ogg
+Lv.20 달성!	level_20.ogg
+인력거 테마가 열렸습니다.	theme_1.ogg
+가마 테마가 열렸습니다.	theme_2.ogg
+꽃가마 테마가 열렸습니다.	theme_3.ogg
+어가 행렬 테마가 열렸습니다.	theme_4.ogg
+어린이보호구역입니다. 천천히!	school_zone.ogg
+아이 지킴이! 어린이보호구역을 천천히 지나셨습니다.	guardian.ogg
+쉬어가는 행차입니다. 오늘 모은 도감을 정리해 볼까요?	charging.ogg
+이달의 동반자 거북이가 행차에 합류했습니다.	companion.ogg
+울산에 오셨습니다. 고래 테마가 켜집니다.	region_ulsan.ogg
+횡성에 오셨습니다. 한우 테마가 켜집니다.	region_hoengseong.ogg
+단골 등급이 올랐습니다. 동 고래입니다.	grade_ulsan_1.ogg
+단골 등급이 올랐습니다. 은 고래입니다.	grade_ulsan_2.ogg
+단골 등급이 올랐습니다. 금 고래입니다.	grade_ulsan_3.ogg
+단골 등급이 올랐습니다. 플래티넘 고래입니다.	grade_ulsan_4.ogg
+단골 등급이 올랐습니다. 2등급 한우입니다.	grade_hoengseong_1.ogg
+단골 등급이 올랐습니다. 1등급 한우입니다.	grade_hoengseong_2.ogg
+단골 등급이 올랐습니다. 1+ 한우입니다.	grade_hoengseong_3.ogg
+단골 등급이 올랐습니다. 투뿔(1++) 한우입니다.	grade_hoengseong_4.ogg
+검약 행차! 아낀 기운이 곳간에 쌀로 쌓였습니다.	eco.ogg
+빗길을 차분히 달리셨습니다.	rain_calm.ogg
+눈길을 차분히 달리셨습니다.	snow_calm.ogg
+야행을 나섭니다. 초롱을 밝힙니다.	night.ogg
+안전띠를 매셔야 개근으로 셉니다.	belt.ogg
+오래 달리셨습니다. 역마를 갈아탈 때입니다. 쉬어 가세요.	rest_due.ogg
+앞길에 휴게소가 있습니다.	rest_area_ahead.ogg
+가까운 휴게소를 내비게이션에 띄웠습니다.	rest_search.ogg
+역참에서 잘 쉬셨습니다. 다시 길을 나섭니다.	rested.ogg
+개근 보호권으로 개근 기록을 지켰습니다.	shield_used.ogg
+정비를 마쳤습니다. 개근 보호권을 드립니다.	quest_done.ogg
+대장간 퀘스트입니다. 말편자를 갈 때입니다.	quest_tire.ogg
+대장간 퀘스트입니다. 굴대에 기름칠할 때입니다.	quest_oil.ogg
+옛길 원정, 판교에 이르렀습니다.	station_pangyo.ogg
+옛길 원정, 용인에 이르렀습니다.	station_yongin.ogg
+옛길 원정, 양지에 이르렀습니다.	station_yangji.ogg
+옛길 원정, 죽산에 이르렀습니다.	station_juksan.ogg
+옛길 원정, 충주에 이르렀습니다.	station_chungju.ogg
+옛길 원정, 문경새재 조령관에 이르렀습니다.	station_joryeong.ogg
+옛길 원정, 유곡에 이르렀습니다.	station_yugok.ogg
+옛길 원정, 낙동나루에 이르렀습니다.	station_nakdong.ogg
+옛길 원정, 선산에 이르렀습니다.	station_seonsan.ogg
+옛길 원정, 대구 경상감영에 이르렀습니다.	station_daegu.ogg
+옛길 원정, 청도에 이르렀습니다.	station_cheongdo.ogg
+옛길 원정, 밀양 영남루에 이르렀습니다.	station_miryang.ogg
+옛길 원정, 양산에 이르렀습니다.	station_yangsan.ogg
+옛길 원정, 동래에 이르렀습니다.	station_dongnae.ogg
+대왕암공원 도착! 스탬프를 찍었습니다.	stamp_daewangam.ogg
+장생포 고래문화마을 도착! 스탬프를 찍었습니다.	stamp_jangsaengpo.ogg
+태화강 국가정원 도착! 스탬프를 찍었습니다.	stamp_taehwagang.ogg
+간절곶 도착! 스탬프를 찍었습니다.	stamp_ganjeolgot.ogg
+횡성호수길 도착! 스탬프를 찍었습니다.	stamp_hoengseong_lake.ogg
+풍수원성당 도착! 스탬프를 찍었습니다.	stamp_pungsuwon.ogg
+미술관 자작나무숲 도착! 스탬프를 찍었습니다.	stamp_birch_forest.ogg
+경복궁 도착! 스탬프를 찍었습니다.	stamp_gyeongbokgung.ogg
+N서울타워 도착! 스탬프를 찍었습니다.	stamp_n_seoul_tower.ogg
+해운대 도착! 스탬프를 찍었습니다.	stamp_haeundae.ogg
+감천문화마을 도착! 스탬프를 찍었습니다.	stamp_gamcheon.ogg
+김광석다시그리기길 도착! 스탬프를 찍었습니다.	stamp_kim_kwangseok.ogg
+서문시장 도착! 스탬프를 찍었습니다.	stamp_seomun.ogg
+월미도 도착! 스탬프를 찍었습니다.	stamp_wolmido.ogg
+인천 차이나타운 도착! 스탬프를 찍었습니다.	stamp_chinatown.ogg
+무등산 도착! 스탬프를 찍었습니다.	stamp_mudeungsan.ogg
+양림동 역사문화마을 도착! 스탬프를 찍었습니다.	stamp_yangnim.ogg
+한빛탑 도착! 스탬프를 찍었습니다.	stamp_hanbit_tower.ogg
+성심당 도착! 스탬프를 찍었습니다.	stamp_sungsimdang.ogg
+불국사 도착! 스탬프를 찍었습니다.	stamp_bulguksa.ogg
+첨성대 도착! 스탬프를 찍었습니다.	stamp_cheomseongdae.ogg
+전주한옥마을 도착! 스탬프를 찍었습니다.	stamp_jeonju_hanok.ogg
+경기전 도착! 스탬프를 찍었습니다.	stamp_gyeonggijeon.ogg
+경포대 도착! 스탬프를 찍었습니다.	stamp_gyeongpo.ogg
+안목해변 도착! 스탬프를 찍었습니다.	stamp_anmok.ogg
+성산일출봉 도착! 스탬프를 찍었습니다.	stamp_seongsan.ogg
+한라산 도착! 스탬프를 찍었습니다.	stamp_hallasan.ogg
+오동도 도착! 스탬프를 찍었습니다.	stamp_odongdo.ogg
+이순신광장 도착! 스탬프를 찍었습니다.	stamp_yi_sunsin_square.ogg
+하회마을 도착! 스탬프를 찍었습니다.	stamp_hahoe.ogg
+월영교 도착! 스탬프를 찍었습니다.	stamp_wolyeonggyo.ogg
+서울에 오셨습니다. 한양 도성 행차입니다.	region_seoul.ogg
+부산에 오셨습니다. 파도 소리가 반깁니다.	region_busan.ogg
+대구에 오셨습니다. 사과 향이 반깁니다.	region_daegu.ogg
+인천에 오셨습니다. 짜장면 냄새가 반깁니다.	region_incheon.ogg
+광주에 오셨습니다. 무등산이 반깁니다.	region_gwangju.ogg
+대전에 오셨습니다. 한빛탑이 반깁니다.	region_daejeon.ogg
+경주에 오셨습니다. 천년 고도 행차입니다.	region_gyeongju.ogg
+전주에 오셨습니다. 비빔밥의 고장입니다.	region_jeonju.ogg
+강릉에 오셨습니다. 커피 향이 반깁니다.	region_gangneung.ogg
+제주에 오셨습니다. 돌하르방이 반깁니다.	region_jeju.ogg
+여수에 오셨습니다. 밤바다가 반깁니다.	region_yeosu.ogg
+안동에 오셨습니다. 하회탈이 웃으며 반깁니다.	region_andong.ogg
+지역 도감에 울산 고래가 올랐습니다.	collect_ulsan.ogg
+지역 도감에 횡성 한우가 올랐습니다.	collect_hoengseong.ogg
+지역 도감에 서울 해치가 올랐습니다.	collect_seoul.ogg
+지역 도감에 부산 바다가 올랐습니다.	collect_busan.ogg
+지역 도감에 대구 사과가 올랐습니다.	collect_daegu.ogg
+지역 도감에 인천 짜장면이 올랐습니다.	collect_incheon.ogg
+지역 도감에 광주 무등산이 올랐습니다.	collect_gwangju.ogg
+지역 도감에 대전 한빛탑이 올랐습니다.	collect_daejeon.ogg
+지역 도감에 경주 왕관이 올랐습니다.	collect_gyeongju.ogg
+지역 도감에 전주 비빔밥이 올랐습니다.	collect_jeonju.ogg
+지역 도감에 강릉 커피가 올랐습니다.	collect_gangneung.ogg
+지역 도감에 제주 돌하르방이 올랐습니다.	collect_jeju.ogg
+지역 도감에 여수 밤바다가 올랐습니다.	collect_yeosu.ogg
+지역 도감에 안동 하회탈이 올랐습니다.	collect_andong.ogg
+단골 등급이 올랐습니다. 서울 길손입니다.	grade_seoul_1.ogg
+단골 등급이 올랐습니다. 서울 단골손님입니다.	grade_seoul_2.ogg
+단골 등급이 올랐습니다. 서울 이웃사촌입니다.	grade_seoul_3.ogg
+단골 등급이 올랐습니다. 서울 명예 주민입니다.	grade_seoul_4.ogg
+단골 등급이 올랐습니다. 부산 길손입니다.	grade_busan_1.ogg
+단골 등급이 올랐습니다. 부산 단골손님입니다.	grade_busan_2.ogg
+단골 등급이 올랐습니다. 부산 이웃사촌입니다.	grade_busan_3.ogg
+단골 등급이 올랐습니다. 부산 명예 주민입니다.	grade_busan_4.ogg
+단골 등급이 올랐습니다. 대구 길손입니다.	grade_daegu_1.ogg
+단골 등급이 올랐습니다. 대구 단골손님입니다.	grade_daegu_2.ogg
+단골 등급이 올랐습니다. 대구 이웃사촌입니다.	grade_daegu_3.ogg
+단골 등급이 올랐습니다. 대구 명예 주민입니다.	grade_daegu_4.ogg
+단골 등급이 올랐습니다. 인천 길손입니다.	grade_incheon_1.ogg
+단골 등급이 올랐습니다. 인천 단골손님입니다.	grade_incheon_2.ogg
+단골 등급이 올랐습니다. 인천 이웃사촌입니다.	grade_incheon_3.ogg
+단골 등급이 올랐습니다. 인천 명예 주민입니다.	grade_incheon_4.ogg
+단골 등급이 올랐습니다. 광주 길손입니다.	grade_gwangju_1.ogg
+단골 등급이 올랐습니다. 광주 단골손님입니다.	grade_gwangju_2.ogg
+단골 등급이 올랐습니다. 광주 이웃사촌입니다.	grade_gwangju_3.ogg
+단골 등급이 올랐습니다. 광주 명예 주민입니다.	grade_gwangju_4.ogg
+단골 등급이 올랐습니다. 대전 길손입니다.	grade_daejeon_1.ogg
+단골 등급이 올랐습니다. 대전 단골손님입니다.	grade_daejeon_2.ogg
+단골 등급이 올랐습니다. 대전 이웃사촌입니다.	grade_daejeon_3.ogg
+단골 등급이 올랐습니다. 대전 명예 주민입니다.	grade_daejeon_4.ogg
+단골 등급이 올랐습니다. 경주 길손입니다.	grade_gyeongju_1.ogg
+단골 등급이 올랐습니다. 경주 단골손님입니다.	grade_gyeongju_2.ogg
+단골 등급이 올랐습니다. 경주 이웃사촌입니다.	grade_gyeongju_3.ogg
+단골 등급이 올랐습니다. 경주 명예 주민입니다.	grade_gyeongju_4.ogg
+단골 등급이 올랐습니다. 전주 길손입니다.	grade_jeonju_1.ogg
+단골 등급이 올랐습니다. 전주 단골손님입니다.	grade_jeonju_2.ogg
+단골 등급이 올랐습니다. 전주 이웃사촌입니다.	grade_jeonju_3.ogg
+단골 등급이 올랐습니다. 전주 명예 주민입니다.	grade_jeonju_4.ogg
+단골 등급이 올랐습니다. 강릉 길손입니다.	grade_gangneung_1.ogg
+단골 등급이 올랐습니다. 강릉 단골손님입니다.	grade_gangneung_2.ogg
+단골 등급이 올랐습니다. 강릉 이웃사촌입니다.	grade_gangneung_3.ogg
+단골 등급이 올랐습니다. 강릉 명예 주민입니다.	grade_gangneung_4.ogg
+단골 등급이 올랐습니다. 제주 길손입니다.	grade_jeju_1.ogg
+단골 등급이 올랐습니다. 제주 단골손님입니다.	grade_jeju_2.ogg
+단골 등급이 올랐습니다. 제주 이웃사촌입니다.	grade_jeju_3.ogg
+단골 등급이 올랐습니다. 제주 명예 주민입니다.	grade_jeju_4.ogg
+단골 등급이 올랐습니다. 여수 길손입니다.	grade_yeosu_1.ogg
+단골 등급이 올랐습니다. 여수 단골손님입니다.	grade_yeosu_2.ogg
+단골 등급이 올랐습니다. 여수 이웃사촌입니다.	grade_yeosu_3.ogg
+단골 등급이 올랐습니다. 여수 명예 주민입니다.	grade_yeosu_4.ogg
+단골 등급이 올랐습니다. 안동 길손입니다.	grade_andong_1.ogg
+단골 등급이 올랐습니다. 안동 단골손님입니다.	grade_andong_2.ogg
+단골 등급이 올랐습니다. 안동 이웃사촌입니다.	grade_andong_3.ogg
+단골 등급이 올랐습니다. 안동 명예 주민입니다.	grade_andong_4.ogg
+새 칭호를 얻었습니다. 첫 행차.	title_first_trip.ogg
+새 칭호를 얻었습니다. 길 위의 선비.	title_trips_30.ogg
+새 칭호를 얻었습니다. 백 리 나그네.	title_li_100.ogg
+새 칭호를 얻었습니다. 천 리 행차꾼.	title_li_1000.ogg
+새 칭호를 얻었습니다. 개근 선비.	title_streak_7.ogg
+새 칭호를 얻었습니다. 개근 장원급제.	title_streak_30.ogg
+새 칭호를 얻었습니다. 정체길 도사.	title_calm_20.ogg
+새 칭호를 얻었습니다. 암행어사의 벗.	title_mapae_3.ogg
+새 칭호를 얻었습니다. 아이 지킴이 대장.	title_guardian_5.ogg
+새 칭호를 얻었습니다. 달빛 행차꾼.	title_night_5.ogg
+새 칭호를 얻었습니다. 우중 신선.	title_rain_5.ogg
+새 칭호를 얻었습니다. 검약 대감.	title_eco_10.ogg
+새 칭호를 얻었습니다. 곳간 부자.	title_rice_10.ogg
+새 칭호를 얻었습니다. 역참 단골.	title_rest_3.ogg
+새 칭호를 얻었습니다. 대장간 단골.	title_smith_3.ogg
+새 칭호를 얻었습니다. 명소 수집가.	title_stamp_5.ogg
+새 칭호를 얻었습니다. 명소 완주.	title_town_all.ogg
+새 칭호를 얻었습니다. 팔도 유람객.	title_regions_7.ogg
+새 칭호를 얻었습니다. 고을의 자랑.	title_regular_top.ogg
+새 칭호를 얻었습니다. 새재 넘은 나그네.	title_joryeong.ogg
+새 칭호를 얻었습니다. 영남대로 완주자.	title_yeongnam.ogg
+새 칭호를 얻었습니다. 금요일의 해방자.	title_friday_5.ogg
+새 칭호를 얻었습니다. 새벽 출근 장인.	title_dawn_3.ogg
+새 칭호를 얻었습니다. 어린이의 수호신.	title_guardian_50.ogg
+새 칭호를 얻었습니다. 만석꾼.	title_rice_100.ogg
+새 칭호를 얻었습니다. 백일 개근 영의정.	title_streak_100.ogg
+새 칭호를 얻었습니다. 만 리 행차꾼.	title_li_10000.ogg
+새 칭호를 얻었습니다. 영남대로 삼세번.	title_yeongnam_3.ogg
+새 칭호를 얻었습니다. 방방곡곡 대장정.	title_regions_all.ogg
+새 칭호를 얻었습니다. 명소 도감 완성.	title_stamps_all.ogg
+새 칭호를 얻었습니다. 어사또.	title_mapae_30.ogg
+새 칭호를 얻었습니다. 삼도 명예 주민.	title_top_3.ogg
+새 칭호를 얻었습니다. 비 오는 밤의 나그네.	title_rainy_night.ogg
+새 칭호를 얻었습니다. 제야의 행차.	title_new_year.ogg
+부지런한 닭이 행차에 합류했습니다.	buddy_rooster.ogg
+부엉이가 밤길 행차에 합류했습니다.	buddy_owl.ogg
+다람쥐가 곳간지기로 합류했습니다.	buddy_squirrel.ogg
+까치가 반가운 소식을 물고 합류했습니다.	buddy_magpie.ogg
+삽살개가 행차를 지키러 합류했습니다.	buddy_sapsal.ogg
+호랑이가 암행어사의 호위로 합류했습니다.	buddy_tiger.ogg
+문경새재 도깨비가 행차에 합류했습니다.	buddy_dokkaebi.ogg
+전설의 청룡이 구름을 타고 행차에 합류했습니다.	buddy_dragon.ogg
+전설의 봉황이 날아와 행차에 합류했습니다.	buddy_phoenix.ogg
+전설의 구미호가 만 리 길을 따라 행차에 합류했습니다.	buddy_gumiho.ogg

@@ -1,5 +1,6 @@
 package haengcha.app.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -26,13 +27,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -58,7 +58,9 @@ import androidx.compose.ui.unit.sp
 import haengcha.drive.Celebration
 import haengcha.drive.DriveUiState
 import haengcha.app.R
-import haengcha.judge.Announcements
+import haengcha.judge.Buddy
+import haengcha.judge.Rarity
+import haengcha.judge.josa
 import haengcha.judge.GuardianRule
 import haengcha.judge.ArrivalRule
 import haengcha.judge.EcoRule
@@ -69,8 +71,6 @@ import haengcha.judge.WeatherRule
 import haengcha.judge.journey
 import haengcha.judge.JoseonTheme
 import haengcha.judge.ProgressSummary
-import haengcha.judge.Region
-import haengcha.judge.RegularStatus
 import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.cos
@@ -86,6 +86,10 @@ class ScreenActions(
     val switchProfile: (String) -> Unit,
     val addProfile: () -> Unit,
     val buy: (String) -> Unit,
+    val chooseBuddy: (Buddy) -> Unit,
+    /** 화면 배치: 내비게이션 가운데, 행차 오른쪽. */
+    val naviCenter: () -> Boolean = { true },
+    val setNaviCenter: (Boolean) -> Unit = {},
 )
 
 /** 콜라보 동반자(가상 캐릭터). 실제 IP는 라이선스 계약 이후 사업화 단계에서 다룬다(기획서 4.8, 12.1). */
@@ -103,27 +107,28 @@ internal fun MenuChips(state: DriveUiState, onOpen: (PanelKind) -> Unit, modifie
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Chip("도감", onClick = { onOpen(PanelKind.DOGAM) })
         Chip("원정", onClick = { onOpen(PanelKind.JOURNEY) })
-        Chip("동반자", R.drawable.companion_turtle, iconAlpha = if (state.progress.companion.joined) 1f else 0.45f) { onOpen(PanelKind.COMPANION) }
+        Chip("동반자", buddy = state.buddy) { onOpen(PanelKind.COMPANION) }
         Chip("상점", onClick = { onOpen(PanelKind.SHOP) })
         Chip(profile, onClick = { onOpen(PanelKind.PROFILE) })
     }
 }
 
 @Composable
-private fun Chip(text: String, @DrawableRes icon: Int? = null, iconAlpha: Float = 1f, onClick: () -> Unit) {
+private fun Chip(text: String, buddy: Buddy? = null, onClick: () -> Unit) {
     Row(
         Modifier.heightIn(min = 64.dp).clip(RoundedCornerShape(20.dp)).glass().clickable(onClick = onClick).padding(horizontal = 22.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        icon?.let { Image(painterResource(it), null, Modifier.size(40.dp).alpha(iconAlpha)) }
+        buddy?.let { BuddyPicture(it, 40.dp) }
         Text(text, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
-/** 어둡게 깐 화면 위의 큰 패널. 뒤를 눌러도 닫히지 않게 터치를 막는다. */
+/** 어둡게 깐 화면 위의 큰 패널. 뒤를 눌러도 닫히지 않게 터치를 막는다. 뒤로 가기 키(차량 물리 버튼 포함)로 닫는다. */
 @Composable
 internal fun PanelOverlay(title: String, subtitle: String?, onClose: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+    BackHandler(onBack = onClose)
     Box(
         Modifier.fillMaxSize().background(Color(0xB3000000)).clickable(MutableInteractionSource(), null) {},
         contentAlignment = Alignment.Center,
@@ -159,45 +164,26 @@ internal fun ColumnScope.DogamContent(p: ProgressSummary) {
         fontWeight = FontWeight.Bold,
     )
     SectionLabel("탈것 도감")
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        JoseonTheme.entries.forEach { t ->
+    TileGrid(JoseonTheme.entries, minTile = 170.dp, maxColumns = 5) { t, m ->
             val open = t in p.themes
-            Column(Modifier.weight(1f).tile(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(m.tile(), horizontalAlignment = Alignment.CenterHorizontally) {
                 assetBitmap("icons/icon_${t.name.lowercase()}.webp")?.let {
                     Image(it, t.label, Modifier.size(120.dp).alpha(if (open) 1f else 0.25f))
                 }
                 Text(t.label, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 Text(if (open) "열림" else "Lv.${t.unlockLevel}에 열림", fontSize = 18.sp, color = if (open) Gold else Muted)
             }
-        }
-    }
-    SectionLabel("지역 도감")
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Region.entries.forEach { r -> RegionTile(r, p.regulars.firstOrNull { it.region == r }, Modifier.weight(1f)) }
     }
     SectionLabel("모은 것")
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        StatTile(R.drawable.icon_mapae, "마패", "${p.mapaeCount}개", Modifier.weight(1f))
-        StatTile(R.drawable.icon_guardian, "아이 지킴이", "${p.guardianCount}회", Modifier.weight(1f))
-        StatTile(R.drawable.companion_turtle, "이달 동반자", if (p.companion.joined) "거북이 합류" else "${p.companion.tripsThisMonth}/${p.companion.goal}회", Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun RegionTile(r: Region, status: RegularStatus?, modifier: Modifier) {
-    Row(modifier.tile(), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Image(painterResource(r.icon), null, Modifier.size(96.dp).alpha(if (status != null) 1f else 0.3f))
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("${r.label} ${r.theme}", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text(status?.let { "${it.gradeLabel} 단골 · 방문 ${it.visitDays}일" } ?: "아직 못 가 본 곳", fontSize = 18.sp, color = if (status != null) Gold else Muted)
-            // 단골 등급 다섯 칸
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                r.grades.indices.forEach { i ->
-                    Box(Modifier.size(14.dp).clip(CircleShape).background(if (status != null && i <= status.grade) Gold else Line))
-                }
-            }
+    TileGrid(listOf(0, 1, 2), minTile = 240.dp) { i, m ->
+        when (i) {
+            0 -> StatTile(R.drawable.icon_mapae, "마패", "${p.mapaeCount}개", m)
+            1 -> StatTile(R.drawable.icon_guardian, "아이 지킴이", "${p.guardianCount}회", m)
+            else -> StatTile(R.drawable.companion_turtle, "동반자", "${p.buddies.size}/${Buddy.entries.size}", m)
         }
     }
+    TitleSection(p)
+    RegionSection(p)
 }
 
 @Composable
@@ -213,27 +199,8 @@ private fun StatTile(@DrawableRes icon: Int, label: String, value: String, modif
 
 /** 주행 보상 동반자와 보유한 콜라보 동반자(기획서 4.8). */
 @Composable
-internal fun ColumnScope.CompanionContent(state: DriveUiState) {
-    val c = state.progress.companion
-    Row(horizontalArrangement = Arrangement.spacedBy(28.dp), verticalAlignment = Alignment.CenterVertically) {
-        Image(painterResource(R.drawable.companion_turtle), "거북이", Modifier.size(180.dp).alpha(if (c.joined) 1f else 0.4f))
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("이달의 동반자 · 거북이", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-            Text(
-                if (c.joined) "행차에 함께하고 있습니다" else "이달 ${c.goal - c.tripsThisMonth}회 더 달리면 합류합니다",
-                fontSize = 22.sp,
-                color = Gold,
-            )
-            LinearProgressIndicator(
-                progress = { (c.tripsThisMonth.toFloat() / c.goal).coerceAtMost(1f) },
-                modifier = Modifier.fillMaxWidth().height(12.dp),
-                color = Gold,
-                trackColor = Line,
-            )
-            Text("이달 주행 ${c.tripsThisMonth}/${c.goal}회", fontSize = 18.sp, color = Muted)
-        }
-    }
-    Text("주행 보상 동반자는 판매하지 않습니다. 달이 바뀌면 다시 모읍니다.", fontSize = 18.sp, color = Muted)
+internal fun ColumnScope.CompanionContent(state: DriveUiState, onChoose: (Buddy) -> Unit) {
+    BuddySection(state, onChoose)
     val owned = COLLAB.filter { it.id in state.owned }
     if (owned.isNotEmpty()) {
         SectionLabel("콜라보 동반자")
@@ -298,6 +265,18 @@ internal fun ColumnScope.ProfileContent(state: DriveUiState, actions: ScreenActi
     }
     if (state.inTrip) Text("주행 중에는 운전자를 바꿀 수 없습니다.", fontSize = 18.sp, color = Gold)
     OutlinedButton(onClick = actions.addProfile, modifier = Modifier.heightIn(min = 64.dp)) { Text("운전자 추가", fontSize = 22.sp) }
+    SectionLabel("화면 배치")
+    var naviCenter by remember { mutableStateOf(actions.naviCenter()) }
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 72.dp).tile().clickable { naviCenter = !naviCenter; actions.setNaviCenter(naviCenter) },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("내비게이션 가운데 · 행차 오른쪽", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("행차가 가운데 칸에서 열리면 내비게이션을 가운데로 불러 길 안내를 운전자 가까이 둡니다", fontSize = 17.sp, color = Muted)
+        }
+        Switch(checked = naviCenter, onCheckedChange = { naviCenter = it; actions.setNaviCenter(it) })
+    }
 }
 
 /**
@@ -306,13 +285,26 @@ internal fun ColumnScope.ProfileContent(state: DriveUiState, actions: ScreenActi
  */
 @Composable
 internal fun CelebrationOverlay(c: Celebration, onDone: () -> Unit) {
+    BackHandler(onBack = onDone)
     val (title, subtitle) = when (c) {
         is Celebration.ThemeUnlocked -> "${c.theme.label} 테마가 열렸습니다" to "Lv.${c.theme.unlockLevel} 달성 · 정차 화면의 탈것이 바뀌었습니다"
-        is Celebration.RegionJoined -> "${c.status.region.label} ${c.status.region.theme} 테마가 켜졌습니다" to "${c.status.gradeLabel} 단골이 되었습니다"
+        is Celebration.RegionJoined -> c.status.region.let { r ->
+            if (r.graded) "${r.label} ${r.theme} 테마가 켜졌습니다" to "${c.status.gradeLabel} 단골이 되었습니다"
+            else "지역 도감 · ${r.label} ${r.theme}" to "${r.label}의 ${c.status.gradeLabel}${c.status.gradeLabel.josa("이", "가")} 되었습니다"
+        }
         is Celebration.GradeUp -> "단골 등급이 올랐습니다" to "${c.status.region.label} · ${c.status.gradeLabel}"
         Celebration.Mapae -> "암행어사 출두요!" to "아까 10분, 차분히 잘 달리셨습니다. 마패를 하사합니다 · +${InspectionRule().mapaeXp}XP"
         Celebration.Guardian -> "아이 지킴이" to "어린이보호구역을 천천히 지나셨습니다 · +${GuardianRule().bonusXp}XP"
-        is Celebration.CompanionJoined -> Announcements.COMPANION_JOINED.removeSuffix(".") to "이달 주행 ${c.trips}회를 채웠습니다"
+        is Celebration.BuddyJoined -> (if (c.buddy.rarity == Rarity.LEGEND) "전설의 동반자 · ${c.buddy.label}" else "${c.buddy.label}${c.buddy.label.josa("이", "가")} 합류했습니다") to
+            "${c.buddy.condition} · \"${c.buddy.cheer}\""
+        is Celebration.TitleEarned -> c.title.let { t ->
+            val kind = when {
+                t.hidden -> "숨은 칭호 발견"
+                t.rarity == Rarity.COMMON -> "새 칭호"
+                else -> "${t.rarity.label} 칭호"
+            }
+            "$kind · ${t.label}" to t.desc
+        }
         is Celebration.Eco -> "검약 행차" to String.format(
             Locale.ROOT, "이번 주행 전비 %.1fkm/kWh · 곳간에 쌀 %.1f섬 · +%dXP", c.kmPerKwh, c.rice, EcoRule().bonusXp,
         )
@@ -372,11 +364,12 @@ internal fun CelebrationOverlay(c: Celebration, onDone: () -> Unit) {
 private fun CelebrationIcon(c: Celebration, modifier: Modifier) {
     when (c) {
         is Celebration.ThemeUnlocked -> assetBitmap("icons/icon_${c.theme.name.lowercase()}.webp")?.let { Image(it, c.theme.label, modifier) }
-        is Celebration.RegionJoined -> Image(painterResource(c.status.region.icon), null, modifier)
-        is Celebration.GradeUp -> Image(painterResource(c.status.region.icon), null, modifier)
+        is Celebration.RegionJoined -> Box(modifier, contentAlignment = Alignment.Center) { RegionEmblem(c.status.region, 200.dp) }
+        is Celebration.GradeUp -> Box(modifier, contentAlignment = Alignment.Center) { RegionEmblem(c.status.region, 200.dp) }
         Celebration.Mapae -> Image(painterResource(R.drawable.icon_mapae), null, modifier)
         Celebration.Guardian -> Image(painterResource(R.drawable.icon_guardian), null, modifier)
-        is Celebration.CompanionJoined -> Image(painterResource(R.drawable.companion_turtle), null, modifier)
+        is Celebration.BuddyJoined -> Box(modifier, contentAlignment = Alignment.Center) { BuddyPicture(c.buddy, 220.dp) }
+        is Celebration.TitleEarned -> CelebrationEmoji(c.title.emoji, modifier)
         is Celebration.Eco -> CelebrationEmoji("🌾", modifier)
         is Celebration.WeatherCalm -> CelebrationEmoji(if (c.weather == Weather.SNOW) "❄️" else "🌧️", modifier)
         Celebration.Rested -> CelebrationEmoji("🐎", modifier)

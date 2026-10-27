@@ -1,12 +1,14 @@
 package haengcha.drive
 
 import haengcha.judge.Announcements
+import haengcha.judge.Buddy
 import haengcha.judge.Destination
 import haengcha.judge.GeoPoint
 import haengcha.judge.Landmark
 import haengcha.judge.Quest
 import haengcha.judge.RestRule
 import haengcha.judge.Station
+import haengcha.judge.Title
 import haengcha.judge.Weather
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -266,5 +268,33 @@ class DriveEngineTest {
         assertEquals(2, rig.records.size)
         assertTrue(rig.said.isEmpty(), "재부팅 뒤 마감한 주행은 안내하지 않는다")
         assertNull(rig.journal.lines)
+    }
+    @Test
+    fun `다섯 번째 야행에서 부엉이가 합류하고 바로 데리고 다닌다`() {
+        val rig = Rig()
+        rig.engine.seedTour() // 지난 야행 4번
+        assertTrue(Title.FIRST_TRIP in rig.state.progress.titles)
+        assertNull(rig.state.buddy)
+        rig.calmTrip(events = listOf(20.0 to { rig.engine.onHeadlights(true) }))
+        assertTrue(rig.records.last().night)
+        assertEquals(Buddy.OWL, rig.state.buddy)
+        assertEquals(Buddy.OWL, rig.settings.buddy(Profile.DEFAULT.id))
+        assertTrue(Celebration.BuddyJoined(Buddy.OWL) in rig.state.celebrations)
+        assertTrue(Celebration.TitleEarned(Title.NIGHT_5) in rig.state.celebrations)
+        val closing = rig.lines.lastIndexOf(Announcements.CLOSING)
+        assertTrue(rig.lines.indexOf(Buddy.OWL.joinLine) in 0 until closing)
+        assertTrue(Announcements.titleEarned(Title.NIGHT_5) in rig.lines)
+        // 아직 합류하지 않은 동반자는 고를 수 없다
+        rig.engine.chooseBuddy(Buddy.TIGER)
+        assertEquals(Buddy.OWL, rig.state.buddy)
+    }
+
+    @Test
+    fun `도감 지역에 들어가면 지역마다 다른 인사를 하고 장면은 바꾸지 않는다`() {
+        val rig = Rig()
+        rig.calmTrip(events = listOf(30.0 to { rig.engine.onLocation(GeoPoint(35.1631, 129.1636)) })) // 해운대
+        assertEquals(haengcha.judge.Region.BUSAN, rig.state.region)
+        assertTrue("부산에 오셨습니다. 파도 소리가 반깁니다." in rig.lines, "${rig.lines}")
+        assertTrue("지역 도감에 부산 바다가 올랐습니다." in rig.lines)
     }
 }

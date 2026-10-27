@@ -17,9 +17,10 @@ import java.util.Locale
 
 /**
  * 짧은 음성 안내(기획서 9.3, Pleos 오디오 포커스·선행 묵음 가이드).
- * - 문장마다 미리 녹음한 음성(assets/voice, 소개 영상과 같은 목소리)을 찾아 이어 붙이고 앞에 180ms 묵음을 넣어 재생한다.
- *   Pleos 에뮬레이터 음성 엔진은 표준 TextToSpeech API로 보이지 않아서다. 녹음이 없는 문장은 쓸 수 있는 TTS 엔진이 있을 때만
- *   파일로 합성해 같은 방식으로 재생한다. 묵음은 재생을 늦추지 않고 데이터 앞에 붙인다(가이드 권장).
+ * - 문장마다 미리 녹음한 음성(assets/voice, 소개 영상과 같은 목소리, Ogg Opus)을 180ms 묵음 녹음 뒤에 끊김 없이 이어 재생한다
+ *   (MediaPlayer.setNextMediaPlayer). 미리 풀어 잇지 않는 것은 에뮬레이터 코덱으로 3초 문장을 푸는 데 1초 넘게 걸려서다.
+ *   Pleos 에뮬레이터 음성 엔진은 표준 TextToSpeech API로 보이지 않아 녹음을 쓴다. 녹음이 없는 문장은 쓸 수 있는 TTS 엔진이
+ *   있을 때만 WAV 파일로 합성하고 앞에 묵음을 붙여 재생한다. 묵음은 재생을 늦추지 않고 데이터 앞에 둔다(가이드 권장).
  * - 재생 직전에 GAIN_TRANSIENT_MAY_DUCK으로 포커스를 받고 끝나면 반납한다. 거절되면 그 안내는 버린다.
  * - LOSS·LOSS_TRANSIENT(음성 비서 호출 등)면 바로 멈추고 대기 중인 안내까지 버린다. CAN_DUCK이면 소리를 줄인다.
  * - 내비게이션 음성이 나오는 중이면 끝날 때까지 기다린다(최대 10초). 길 안내보다 앞서지 않기 위해서다.
@@ -48,9 +49,9 @@ class VoiceGuide(private val context: Context) {
     private var ttsState = TtsState.INIT
     private val waiting = ArrayDeque<List<String>>()
     private val synthesizing = mutableMapOf<String, File>()
-    private val queue = ArrayDeque<File>()
-    private var playing: File? = null
-    private var player: MediaPlayer? = null
+    private val queue = ArrayDeque<Utterance>()
+    private var playing: Utterance? = null
+    private var players: List<MediaPlayer> = emptyList()
     private var focus: AudioFocusRequest? = null
     private var seq = 0
 
@@ -87,16 +88,7 @@ class VoiceGuide(private val context: Context) {
         while (waiting.isNotEmpty()) say(waiting.removeFirst())
     }
 
-    private fun enqueueRecorded(names: List<String>) {
-        val padded = runCatching {
-            Wav.concatWithLeadingSilence(names.map { context.assets.open("voice/$it").use { s -> s.readBytes() } }, PREROLL_MS)
-        }.getOrNull()
-        if (padded == null) {
-            Log.w(TAG, "녹음을 잇지 못함: $names")
-            return
-        }
-        enqueue(padded, "voice-${seq++}")
-    }
+    private fun enqueueRecorded(names: List<String>) = enqueue(Utterance.Recorded("voice-${seq++}", names))
 
     private fun synthesize(text: String) {
         val id = "voice-${seq++}"
@@ -133,9 +125,53 @@ class VoiceGuide(private val context: Context) {
         enqueue(padded, id)
     }
 
-    private fun enqueue(wav: ByteArray, id: String) {
-        queue += File(context.cacheDir, "$id.wav").apply { writeBytes(wav) }
+    private fun enqueue(wav: ByteArray, id: String) = enqueue(Utterance.Synthesized(id, File(context.cacheDir, "$id.wav").apply { writeBytes(wav) }))
+
+    private fun enqueue(u: Utterance) {
+        queue += u
         playNext(SystemClock.elapsedRealtime() + NAVIGATION_WAIT_MS)
+    }
+
+    /** 재생할 안내 하나: 녹음 문장들(앞에 묵음 녹음) 또는 묵음을 붙여 합성한 WAV 파일. */
+    private sealed interface Utterance {
+        val id: String
+
+        data class Recorded(override val id: String, val names: List<String>) : Utterance
+        data class Synthesized(override val id: String, val file: File) : Utterance
+    }
+
+    /** 안내 하나를 이어 재생할 플레이어들. 준비하지 못하면 예외. */
+    private fun prepare(u: Utterance): List<MediaPlayer> {
+        val made = mutableListOf<MediaPlayer>()
+        try {
+            val sources: List<(MediaPlayer) -> Unit> = when (u) {
+                is Utterance.Recorded -> (listOf(PREROLL) + u.names).map { name ->
+                    { mp: MediaPlayer -> context.assets.openFd("voice/$name").use { mp.setDataSource(it) } }
+                }
+                is Utterance.Synthesized -> listOf { mp: MediaPlayer -> mp.setDataSource(u.file.path) }
+            }
+            sources.forEach { source ->
+                made += MediaPlayer().apply {
+                    setAudioAttributes(attributes)
+                    source(this)
+                    setOnErrorListener { _, what, extra ->
+                        Log.w(TAG, "재생 오류 $what/$extra")
+                        finish()
+                        true
+                    }
+                    prepare()
+                }
+            }
+            made.zipWithNext { a, b -> a.setNextMediaPlayer(b) }
+            made.last().setOnCompletionListener {
+                Log.i(TAG, "재생 끝 ${u.id}")
+                finish()
+            }
+            return made
+        } catch (e: Exception) {
+            made.forEach { it.release() }
+            throw e
+        }
     }
 
     private fun playNext(deadline: Long) {
@@ -154,38 +190,40 @@ class VoiceGuide(private val context: Context) {
         val granted = audio.requestAudioFocus(request) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
         Log.i(TAG, "포커스 요청 usage=NOTIFICATION gain=TRANSIENT_MAY_DUCK 결과=${if (granted) "grant" else "reject"}")
         if (!granted) {
-            clip.delete()
+            discard(clip)
             playNext(deadline)
             return
         }
         focus = request
         playing = clip
-        player = runCatching {
-            MediaPlayer().apply {
-                setAudioAttributes(attributes)
-                setDataSource(clip.path)
-                setOnCompletionListener {
-                    Log.i(TAG, "재생 끝 ${clip.name}")
-                    finish()
-                }
-                setOnErrorListener { _, what, extra ->
-                    Log.w(TAG, "재생 오류 $what/$extra")
-                    finish()
-                    true
-                }
-                prepare()
-                start()
-            }
-        }.onFailure { Log.w(TAG, "재생 실패", it) }.getOrNull()
-        if (player == null) finish() else Log.i(TAG, "재생 시작 ${clip.name}")
+        players = runCatching { prepare(clip) }.onFailure { Log.w(TAG, "재생 실패", it) }.getOrDefault(emptyList())
+        if (players.isEmpty()) {
+            finish()
+        } else {
+            players.first().start()
+            // 이어 재생이 끊겨 끝 알림이 오지 않아도 다음 안내가 막히지 않게 한다
+            handler.postDelayed(watchdog, players.sumOf { it.duration.coerceAtLeast(0) } + WATCHDOG_SLACK_MS)
+            Log.i(TAG, "재생 시작 ${clip.id}")
+        }
+    }
+
+    private fun discard(u: Utterance) {
+        if (u is Utterance.Synthesized) u.file.delete()
+    }
+
+    private val watchdog = Runnable {
+        Log.w(TAG, "재생 끝 알림이 없어 마감")
+        finish()
     }
 
     private fun finish() {
-        player?.release()
-        player = null
+        val done = playing ?: return
+        handler.removeCallbacks(watchdog)
+        players.forEach { it.release() }
+        players = emptyList()
         focus?.let { audio.abandonAudioFocusRequest(it) }
         focus = null
-        playing?.delete()
+        discard(done)
         playing = null
         playNext(SystemClock.elapsedRealtime() + NAVIGATION_WAIT_MS)
     }
@@ -194,12 +232,12 @@ class VoiceGuide(private val context: Context) {
         Log.i(TAG, "포커스 변경 $change")
         when (change) {
             AudioManager.AUDIOFOCUS_LOSS, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                queue.forEach { it.delete() }
+                queue.forEach(::discard)
                 queue.clear()
                 finish()
             }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> player?.setVolume(DUCK_VOLUME, DUCK_VOLUME)
-            AudioManager.AUDIOFOCUS_GAIN -> player?.setVolume(1f, 1f)
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> players.forEach { it.setVolume(DUCK_VOLUME, DUCK_VOLUME) }
+            AudioManager.AUDIOFOCUS_GAIN -> players.forEach { it.setVolume(1f, 1f) }
         }
     }
 
@@ -211,8 +249,11 @@ class VoiceGuide(private val context: Context) {
         const val TAG = "VoiceGuide"
         /** Pleos 권장 150~200ms. */
         const val PREROLL_MS = 180
+        /** 180ms 묵음 녹음(합성 WAV에는 PREROLL_MS만큼 묵음을 직접 붙인다). */
+        const val PREROLL = "_preroll.ogg"
         const val NAVIGATION_WAIT_MS = 10_000L
         const val DUCK_VOLUME = 0.3f
         const val MAX_WAITING = 5
+        const val WATCHDOG_SLACK_MS = 3_000L
     }
 }

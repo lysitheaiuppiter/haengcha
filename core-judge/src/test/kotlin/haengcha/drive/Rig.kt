@@ -1,5 +1,6 @@
 package haengcha.drive
 
+import haengcha.judge.Buddy
 import haengcha.judge.Gear
 import haengcha.judge.JournalHeader
 import haengcha.judge.JournalState
@@ -78,6 +79,11 @@ class FakeSettings : DriveSettings {
     override fun shields(profileId: String) = shieldCounts[profileId] ?: 0
     override fun addShield(profileId: String) {
         shieldCounts[profileId] = shields(profileId) + 1
+    }
+    val buddies = mutableMapOf<String, Buddy>()
+    override fun buddy(profileId: String) = buddies[profileId]
+    override fun setBuddy(profileId: String, buddy: Buddy) {
+        buddies[profileId] = buddy
     }
     override var openQuests = emptyMap<Quest, Long>()
     override var restState: String? = null

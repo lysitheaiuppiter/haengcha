@@ -1,5 +1,6 @@
 package haengcha.drive
 
+import haengcha.judge.Buddy
 import haengcha.judge.CompletedTrip
 import haengcha.judge.Destination
 import haengcha.judge.GeoPoint
@@ -213,5 +214,12 @@ internal fun celebrationsFor(
         val was = before.regulars.firstOrNull { it.region == now.region }
         if (was == null) add(Celebration.RegionJoined(now)) else if (now.grade > was.grade) add(Celebration.GradeUp(now))
     }
-    if (after.companion.joined && !before.companion.joined) add(Celebration.CompanionJoined(after.companion.tripsThisMonth))
+    addAll(newBuddiesAndTitles(before, after))
 }
+
+/** 새로 합류한 동반자와 새로 얻은 칭호(한 번에 [MAX_TITLE_CELEBRATIONS]개까지, 나머지는 도감에서 본다). */
+internal fun newBuddiesAndTitles(before: ProgressSummary, after: ProgressSummary): List<Celebration> =
+    Buddy.entries.filter { it in after.buddies && it !in before.buddies }.map(Celebration::BuddyJoined) +
+        (after.titles - before.titles.toSet()).take(MAX_TITLE_CELEBRATIONS).map(Celebration::TitleEarned)
+
+private const val MAX_TITLE_CELEBRATIONS = 3

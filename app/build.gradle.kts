@@ -43,6 +43,12 @@ android {
         release {
             signingConfig = signingConfigs.findByName("release")
         }
+        // 디버그 빌드는 심사용 시연판으로도 쓴다(시연 명령 DebugReceiver 포함, 주행 중 화면이 에뮬레이터에서 보임).
+        // 출시 키가 있으면 같은 키로 서명해 출시판과 기록을 지우지 않고 서로 바꿔 설치할 수 있게 한다.
+        debug {
+            versionNameSuffix = "-demo"
+            signingConfigs.findByName("release")?.let { signingConfig = it }
+        }
     }
 
     buildFeatures {
