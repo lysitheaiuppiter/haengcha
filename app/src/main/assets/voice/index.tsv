@@ -1,0 +1,75 @@
+주상전하 납시오!	boarding.wav
+암행어사 출두요! 아까 10분, 차분히 잘 달리셨습니다. 마패를 하사합니다.	mapae.wav
+오늘도 안전하게, 행차하셨습니다.	closing.wav
+Lv.1 달성!	level_1.wav
+Lv.2 달성!	level_2.wav
+Lv.3 달성!	level_3.wav
+Lv.4 달성!	level_4.wav
+Lv.5 달성!	level_5.wav
+Lv.6 달성!	level_6.wav
+Lv.7 달성!	level_7.wav
+Lv.8 달성!	level_8.wav
+Lv.9 달성!	level_9.wav
+Lv.10 달성!	level_10.wav
+Lv.11 달성!	level_11.wav
+Lv.12 달성!	level_12.wav
+Lv.13 달성!	level_13.wav
+Lv.14 달성!	level_14.wav
+Lv.15 달성!	level_15.wav
+Lv.16 달성!	level_16.wav
+Lv.17 달성!	level_17.wav
+Lv.18 달성!	level_18.wav
+Lv.19 달성!	level_19.wav
+Lv.20 달성!	level_20.wav
+인력거 테마가 열렸습니다.	theme_1.wav
+가마 테마가 열렸습니다.	theme_2.wav
+꽃가마 테마가 열렸습니다.	theme_3.wav
+어가 행렬 테마가 열렸습니다.	theme_4.wav
+어린이보호구역입니다. 천천히!	school_zone.wav
+아이 지킴이! 어린이보호구역을 천천히 지나셨습니다.	guardian.wav
+쉬어가는 행차입니다. 오늘 모은 도감을 정리해 볼까요?	charging.wav
+이달의 동반자 거북이가 행차에 합류했습니다.	companion.wav
+울산에 오셨습니다. 고래 테마가 켜집니다.	region_ulsan.wav
+횡성에 오셨습니다. 한우 테마가 켜집니다.	region_hoengseong.wav
+단골 등급이 올랐습니다. 동 고래입니다.	grade_ulsan_1.wav
+단골 등급이 올랐습니다. 은 고래입니다.	grade_ulsan_2.wav
+단골 등급이 올랐습니다. 금 고래입니다.	grade_ulsan_3.wav
+단골 등급이 올랐습니다. 플래티넘 고래입니다.	grade_ulsan_4.wav
+단골 등급이 올랐습니다. 2등급 한우입니다.	grade_hoengseong_1.wav
+단골 등급이 올랐습니다. 1등급 한우입니다.	grade_hoengseong_2.wav
+단골 등급이 올랐습니다. 1+ 한우입니다.	grade_hoengseong_3.wav
+단골 등급이 올랐습니다. 투뿔(1++) 한우입니다.	grade_hoengseong_4.wav
+검약 행차! 아낀 기운이 곳간에 쌀로 쌓였습니다.	eco.wav
+빗길을 차분히 달리셨습니다.	rain_calm.wav
+눈길을 차분히 달리셨습니다.	snow_calm.wav
+야행을 나섭니다. 초롱을 밝힙니다.	night.wav
+안전띠를 매셔야 개근으로 셉니다.	belt.wav
+오래 달리셨습니다. 역마를 갈아탈 때입니다. 쉬어 가세요.	rest_due.wav
+앞길에 휴게소가 있습니다.	rest_area_ahead.wav
+가까운 휴게소를 내비게이션에 띄웠습니다.	rest_search.wav
+역참에서 잘 쉬셨습니다. 다시 길을 나섭니다.	rested.wav
+개근 보호권으로 개근 기록을 지켰습니다.	shield_used.wav
+정비를 마쳤습니다. 개근 보호권을 드립니다.	quest_done.wav
+대장간 퀘스트입니다. 말편자를 갈 때입니다.	quest_tire.wav
+대장간 퀘스트입니다. 굴대에 기름칠할 때입니다.	quest_oil.wav
+옛길 원정, 판교에 이르렀습니다.	station_pangyo.wav
+옛길 원정, 용인에 이르렀습니다.	station_yongin.wav
+옛길 원정, 양지에 이르렀습니다.	station_yangji.wav
+옛길 원정, 죽산에 이르렀습니다.	station_juksan.wav
+옛길 원정, 충주에 이르렀습니다.	station_chungju.wav
+옛길 원정, 문경새재 조령관에 이르렀습니다.	station_joryeong.wav
+옛길 원정, 유곡에 이르렀습니다.	station_yugok.wav
+옛길 원정, 낙동나루에 이르렀습니다.	station_nakdong.wav
+옛길 원정, 선산에 이르렀습니다.	station_seonsan.wav
+옛길 원정, 대구 경상감영에 이르렀습니다.	station_daegu.wav
+옛길 원정, 청도에 이르렀습니다.	station_cheongdo.wav
+옛길 원정, 밀양 영남루에 이르렀습니다.	station_miryang.wav
+옛길 원정, 양산에 이르렀습니다.	station_yangsan.wav
+옛길 원정, 동래에 이르렀습니다.	station_dongnae.wav
+대왕암공원 도착! 스탬프를 찍었습니다.	stamp_daewangam.wav
+장생포 고래문화마을 도착! 스탬프를 찍었습니다.	stamp_jangsaengpo.wav
+태화강 국가정원 도착! 스탬프를 찍었습니다.	stamp_taehwagang.wav
+간절곶 도착! 스탬프를 찍었습니다.	stamp_ganjeolgot.wav
+횡성호수길 도착! 스탬프를 찍었습니다.	stamp_hoengseong_lake.wav
+풍수원성당 도착! 스탬프를 찍었습니다.	stamp_pungsuwon.wav
+미술관 자작나무숲 도착! 스탬프를 찍었습니다.	stamp_birch_forest.wav

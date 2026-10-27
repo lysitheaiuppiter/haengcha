@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- CAR_SPEED는 실행 중 동의 권한(위치 그룹), 나머지는 일반 권한 -->
+    <uses-permission android:name="android.car.permission.CAR_SPEED" />
+    <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
+    <uses-permission android:name="android.car.permission.CAR_ENERGY_PORTS" />
+    <uses-permission android:name="android.car.permission.CAR_EXTERIOR_ENVIRONMENT" />
+
+    <!-- Pleos Vehicle SDK 조회 권한(App Market과 사전 협의 대상). 쓰는 도메인만 선언한다 -->
+    <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+    <uses-permission android:name="pleos.car.permission.CAR_ENERGY" />
+    <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
+    <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
+    <uses-permission android:name="pleos.car.permission.CAR_WINDOWS" />
+    <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
+    <!-- 경고등(Telltale). 문서상 signature|privileged라 출시 때 협의가 필요하다. 못 받으면 대장간 퀘스트는 엔진오일 신호만 쓰고 안전띠는 체결 신호를 쓴다 -->
+    <uses-permission android:name="pleos.car.permission.PRIVATE_CAR_SAFETY" />
+    <!-- NaviHelper: 목적지·회전 안내 조회, 휴게소 검색 화면 요청 -->
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
+    <uses-permission android:name="pleos.car.permission.NAVI_CUSTOM_MAP" />
+
+    <application>
+        <uses-library
+            android:name="android.car"
+            android:required="false" />
+    </application>
+</manifest>

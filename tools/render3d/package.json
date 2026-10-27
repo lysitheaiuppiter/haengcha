@@ -1,0 +1,9 @@
+{
+  "name": "haengcha-render3d",
+  "private": true,
+  "type": "module",
+  "description": "정차 화면 배경(테마 탈것 3D 무대)을 정지 그림으로 렌더링한다",
+  "dependencies": {
+    "puppeteer-core": "23.11.1"
+  }
+}
