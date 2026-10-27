@@ -108,6 +108,19 @@ class Rig(
 ) {
     val said = mutableListOf<List<String>>()
     var restSearches = 0
+    var hushed = 0
+
+    /** 가짜 음성: 문장마다 [LINE_MS] 걸려 말한 뒤 다 말했다고 알린다. */
+    val voice = object : Voice {
+        override fun say(lines: List<String>, onDone: () -> Unit) {
+            said += lines
+            clock.post(LINE_MS * lines.size, onDone)
+        }
+
+        override fun hush() {
+            hushed++
+        }
+    }
     var engine = newEngine(bootId)
         private set
 
@@ -117,7 +130,7 @@ class Rig(
 
     private fun newEngine(bootId: String) = DriveEngine(
         settings, { id -> stores.getOrPut(id) { MemoryStore() } }, journal, bootId, clock, clock,
-        say = { said += it }, searchRestArea = { restSearches++ },
+        voice = voice, searchRestArea = { restSearches++ },
     )
 
     fun restart(bootId: String) {
@@ -157,7 +170,11 @@ class Rig(
         shiftPark()
     }
 
+    /** 주차 후 축하 연출과 안내가 다 지나가도록 기다린다. */
+    fun hearAll() = wait(120.0)
+
     companion object {
+        const val LINE_MS = 2_000L
         val CALM = arrayOf(
             Triple(5.0, 0.0, 0.0),
             Triple(15.0, 0.0, 40.0),

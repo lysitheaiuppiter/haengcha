@@ -32,6 +32,14 @@ fun interface Scheduler {
     fun post(delayMs: Long, action: () -> Unit)
 }
 
+/** 음성 안내. 들어온 순서대로 말하고, 다 말했거나 말하지 못하고 버렸으면 [say]의 onDone을 부른다. */
+interface Voice {
+    fun say(lines: List<String>, onDone: () -> Unit = {})
+
+    /** 지금 말하는 안내와 기다리는 안내를 모두 거둔다(축하 연출을 손으로 넘길 때). */
+    fun hush()
+}
+
 /** 운전자 한 명의 주행 기록. */
 interface RecordStore {
     fun load(): List<TripRecord>

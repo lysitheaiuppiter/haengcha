@@ -4,6 +4,8 @@ import haengcha.judge.Announcements
 import haengcha.judge.Buddy
 import haengcha.judge.Destination
 import haengcha.judge.GeoPoint
+import haengcha.judge.JoseonTheme
+import haengcha.judge.LiveTrip
 import haengcha.judge.Landmark
 import haengcha.judge.Quest
 import haengcha.judge.RestRule
@@ -31,6 +33,7 @@ class DriveEngineTest {
     fun `차분한 주행을 저장하고 탑승과 마감을 안내한다`() {
         val rig = Rig()
         rig.calmTrip()
+        rig.hearAll()
         val r = rig.records.single()
         assertEquals(20, r.xp)
         assertEquals(0, r.harshAccel + r.harshDecel)
@@ -72,6 +75,7 @@ class DriveEngineTest {
     fun `주행 중 켜진 경고는 주차한 뒤에 알린다`() {
         val rig = Rig()
         rig.calmTrip(events = listOf(30.0 to { rig.engine.onTelltales(setOf("ENGINE_OIL_PRESSURE")) }))
+        rig.hearAll()
         val opened = Announcements.questOpened(Quest.OIL)
         val closing = rig.lines.indexOf(Announcements.CLOSING)
         assertTrue(rig.lines.indexOf(opened) in 0 until closing, "주차 후 마감 안내 앞에 나온다: ${rig.lines}")
@@ -94,6 +98,7 @@ class DriveEngineTest {
         val cels = rig.state.celebrations
         assertTrue(cels.first() is Celebration.Eco)
         assertTrue(Celebration.StationReached(Station.PANGYO) in cels)
+        rig.hearAll()
         assertTrue(Announcements.ECO in rig.lines)
         assertTrue(Announcements.stationReached(Station.PANGYO) in rig.lines)
     }
@@ -152,6 +157,7 @@ class DriveEngineTest {
         assertTrue(Announcements.BELT in rig.lines)
         assertEquals(false, rig.records.last().belt)
         assertTrue(Celebration.ShieldUsed in rig.state.celebrations)
+        rig.hearAll()
         assertTrue(Announcements.SHIELD_USED in rig.lines)
         assertEquals(2, rig.state.progress.streak, "보호권으로 이어 가되 오늘은 세지 않는다")
         assertEquals(0, rig.state.progress.shields)
@@ -233,6 +239,16 @@ class DriveEngineTest {
     }
 
     @Test
+    fun `옛길 길 완주 알림 띠는 바로 뒤 구간 경험치 알림에 덮이지 않는다`() {
+        val board = LiveBoard()
+        board.update(LiveTrip(), 379.9, null, 0)
+        val crossed = board.update(LiveTrip(distanceKm = 0.2), 379.9, null, 1_000)
+        assertEquals("🏆 영남대로 완주 · 동래에 닿았습니다", crossed.banner)
+        assertEquals(crossed.banner, board.update(LiveTrip(distanceKm = 0.3, xp = 10), 379.9, null, 2_000).banner)
+        assertEquals("+10XP · 1분 안전 구간", board.update(LiveTrip(distanceKm = 0.9, xp = 20), 379.9, null, 8_000).banner)
+    }
+
+    @Test
     fun `시연용 기온 고정은 차량이 보내는 기온에 덮이지 않는다`() {
         val rig = Rig()
         rig.engine.onWiper(true)
@@ -281,6 +297,7 @@ class DriveEngineTest {
         assertEquals(Buddy.OWL, rig.settings.buddy(Profile.DEFAULT.id))
         assertTrue(Celebration.BuddyJoined(Buddy.OWL) in rig.state.celebrations)
         assertTrue(Celebration.TitleEarned(Title.NIGHT_5) in rig.state.celebrations)
+        rig.hearAll()
         val closing = rig.lines.lastIndexOf(Announcements.CLOSING)
         assertTrue(rig.lines.indexOf(Buddy.OWL.joinLine) in 0 until closing)
         assertTrue(Announcements.titleEarned(Title.NIGHT_5) in rig.lines)
@@ -313,6 +330,52 @@ class DriveEngineTest {
         rig.calmTrip(events = listOf(30.0 to { rig.engine.onLocation(GeoPoint(35.1631, 129.1636)) })) // 해운대
         assertEquals(haengcha.judge.Region.BUSAN, rig.state.region)
         assertTrue("부산에 오셨습니다. 파도 소리가 반깁니다." in rig.lines, "${rig.lines}")
+        rig.hearAll()
         assertTrue("지역 도감에 부산 바다가 올랐습니다." in rig.lines)
+    }
+
+    @Test
+    fun `주차 후 안내는 축하 연출 한 장마다 그 문장만 말하고 다 말하면 쉬었다가 넘긴다`() {
+        val rig = Rig()
+        rig.engine.seedTour()
+        rig.engine.onBatterySoc(80)
+        rig.engine.onOdometer(1000f)
+        rig.calmTrip(events = listOf(20.0 to { rig.engine.onHeadlights(true) }, 90.0 to {
+            rig.engine.onOdometer(1025f)
+            rig.engine.onBatterySoc(77)
+        }))
+        val cards = rig.state.celebrations
+        assertTrue(cards.size >= 3, "$cards")
+        assertEquals(cards[0].lines(), rig.said.last(), "첫 장의 문장만 말한다")
+        // 다 말하고 쉬는 동안은 그 장에 머문다
+        rig.wait((Rig.LINE_MS * cards[0].lines().size + 1_000L) / 1000.0)
+        assertEquals(cards[0], rig.state.celebrations.first())
+        rig.wait(0.3)
+        assertEquals(cards[1], rig.state.celebrations.first())
+        assertEquals(cards[1].lines(), rig.said.last())
+        // 확인을 누르면 지금 안내를 끊고 바로 다음 장을 말한다
+        rig.engine.dismissCelebration()
+        assertEquals(1, rig.hushed)
+        assertEquals(cards[2], rig.state.celebrations.first())
+        assertEquals(cards[2].lines(), rig.said.last())
+        rig.hearAll()
+        assertTrue(rig.state.celebrations.isEmpty())
+        assertEquals(listOf(Announcements.CLOSING), rig.said.last(), "마감 인사는 연출이 다 끝난 뒤")
+        assertEquals(1, rig.lines.count { it == Announcements.CLOSING })
+    }
+
+    @Test
+    fun `연출 장마다 말할 문장에는 녹음이 있고 테마 해금은 레벨까지 알린다`() {
+        assertEquals(listOf("Lv.1 달성!", "인력거 테마가 열렸습니다."), Celebration.ThemeUnlocked(JoseonTheme.RICKSHAW).lines())
+        assertEquals(listOf("Lv.3 달성!"), Celebration.LevelUp(3).lines())
+        assertTrue(Celebration.Rested.lines().isEmpty())
+        val all = Announcements.all()
+        val cards = listOf(
+            Celebration.Mapae, Celebration.Guardian, Celebration.ShieldUsed, Celebration.Eco(8.0, 1.0),
+            Celebration.WeatherCalm(Weather.SNOW), Celebration.WeatherCalm(Weather.RAIN), Celebration.QuestDone(Quest.TIRE),
+        ) + JoseonTheme.entries.filter { it.unlockLevel > 0 }.map(Celebration::ThemeUnlocked) +
+            Title.entries.map(Celebration::TitleEarned) + Buddy.entries.map(Celebration::BuddyJoined) +
+            Landmark.entries.map(Celebration::Stamp) + Station.entries.filter { it.km > 0 }.map(Celebration::StationReached)
+        cards.forEach { c -> assertTrue(all.containsAll(c.lines()), "$c") }
     }
 }

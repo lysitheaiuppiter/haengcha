@@ -34,6 +34,8 @@ import kotlinx.coroutines.flow.update
  *
  * - 주행 중 음성은 탑승, 지역 진입(그날 처음), 어린이보호구역 진입, 안전띠·야행·역참 안내뿐이고 나머지는 차를 세운 뒤에 낸다.
  *   감찰 시작·진행은 알리지 않는다(기획서 4.6). 어린이보호구역 안에서는 다른 안내를 내지 않는다(4.7).
+ * - 주차 후 안내는 축하 연출 한 장마다 그 장의 문장만 말하고, 다 말하면 잠깐 쉬었다가 다음 장으로 넘긴다.
+ *   한꺼번에 이어 말하면 화면과 어긋나고 숨 돌릴 틈이 없어서다. 마감 인사는 연출이 다 끝난 뒤에 한다.
  * - 주행 중 내비게이션의 다음 회전이 가까우면 행차 음성을 미룬다(9.3, 어린이보호구역 안내는 미루지 않는다).
  * - 주행 중에는 일지([journal])를 남겨, 프로세스가 죽었다 다시 뜨면 같은 부팅([bootId])에서는 이어 가고 재부팅 뒤에는 마감한다.
  * - Pleos Vehicle SDK·NaviHelper 판정은 부품에 맡긴다: 대장간 퀘스트([QuestDesk]), 역참([RestStop]), 명소 도착([ArrivalWatch]),
@@ -46,7 +48,7 @@ class DriveEngine(
     private val bootId: String,
     private val clock: Clock,
     private val scheduler: Scheduler,
-    private val say: (List<String>) -> Unit,
+    private val voice: Voice,
     /** 쉬어 갈 때 내비게이션에 휴게소 검색 화면을 띄운다. */
     private val searchRestArea: () -> Unit = {},
     private val log: (String) -> Unit = {},
@@ -86,6 +88,10 @@ class DriveEngine(
     private var tripRested = false
     private var nightAnnounced = false
     private val questLines = mutableListOf<String>()
+    // 축하 연출 한 장씩 말하기: 지금 장 번호(넘기면 바뀌어 지난 장의 '다 말함'을 버린다), 진행 중인지, 마감 인사가 남았는지
+    private var beat = 0
+    private var beatRunning = false
+    private var closingDue = false
     private var lastJournalExtrasMs = 0L
     private var restAreaM: Double? = null
     private var ticking = false
@@ -170,8 +176,10 @@ class DriveEngine(
         _state.update { it.copy(chosenTitle = title) }
     }
 
+    /** 확인을 누르면 지금 장의 안내를 끊고 바로 다음 장으로 넘긴다. */
     fun dismissCelebration() {
-        _state.update { it.copy(celebrations = it.celebrations.drop(1)) }
+        voice.hush()
+        advanceBeat()
     }
 
     /**
@@ -357,7 +365,7 @@ class DriveEngine(
         _state.update { it.copy(night = scene.night(clock.timeOfDay()), weather = scene.weather()) }
     }
 
-    /** 퀘스트가 닫히면 보호권 연출과 안내, 열리면 3초 뒤에도 열려 있을 때만 안내한다. */
+    /** 퀘스트가 닫히면 보호권 연출(안내 포함), 열리면 3초 뒤에도 열려 있을 때만 안내한다. */
     private fun onQuestChange(change: QuestChange) {
         log("대장간 퀘스트 열림 ${change.opened}, 마침 ${change.completed}, 짧게 켜졌다 꺼짐 ${change.dropped}")
         val before = _state.value.progress
@@ -371,9 +379,8 @@ class DriveEngine(
                 celebrations = it.celebrations + change.completed.map(Celebration::QuestDone) + extra,
             )
         }
-        if (change.completed.isNotEmpty()) {
-            announceQuest(listOf(Announcements.QUEST_DONE) + extra.filterIsInstance<Celebration.TitleEarned>().map { Announcements.titleEarned(it.title) })
-        }
+        // 완료 안내는 축하 연출이 한 장씩 말한다. 주행 중이면 주차한 뒤에 이어서 나온다
+        if (change.completed.isNotEmpty() && !tracker.inTrip) startBeats()
         if (change.opened.isNotEmpty()) {
             scheduler.post(QUEST_CONFIRM_MS) {
                 val still = quests.stillOpen(change.opened)
@@ -405,7 +412,7 @@ class DriveEngine(
     }
 
     private fun release(chunks: List<List<String>>) {
-        chunks.forEach(say)
+        chunks.forEach { voice.say(it) }
         if (_state.value.voiceHeld != gate.holding) _state.update { it.copy(voiceHeld = gate.holding) }
         if (gate.holding) scheduleTick()
     }
@@ -453,6 +460,10 @@ class DriveEngine(
         if (_state.value.inTrip == tracker.inTrip) return
         _state.update { it.copy(inTrip = tracker.inTrip) }
         if (!tracker.inTrip) return
+        // 연출을 다 보기 전에 출발하면 남은 장은 다음 주차 때 이어서 보여 준다
+        beat++
+        beatRunning = false
+        closingDue = false
         epochOffsetMs = currentEpochOffsetMs()
         journal.begin(JournalHeader(tracker.tripStartNanos, tracker.readsGear, bootId, epochOffsetMs, tracker.plan))
         meter.begin()
@@ -519,6 +530,7 @@ class DriveEngine(
         // D단에 잠깐 넣었다 뺀 경우처럼 거의 움직이지 않은 주행은 기록하지도 안내하지도 않는다
         if (trip.result.movingMinutes < MIN_TRIP_MOVING_MIN) {
             log("주행으로 보지 않음: 움직인 시간 ${trip.result.movingMinutes}분")
+            if (announce) startBeats()
             return
         }
         // 차량 신호 시각(단조 시계 기준)을 벽시계 시각으로 바꾼다
@@ -542,7 +554,38 @@ class DriveEngine(
         }
         log("주행 저장 ${record.toCsv()} 감찰=${trip.result.inspection}")
         // 재부팅 뒤 마감한 지난 주행은 조용히 저장만 한다
-        if (announce) speak(Announcements.tripEndLines(trip.result, before, after, guardian, record))
+        if (announce) {
+            closingDue = true
+            startBeats()
+        }
+    }
+
+    private fun startBeats() {
+        if (!beatRunning) playBeat()
+    }
+
+    /**
+     * 맨 앞 축하 연출의 문장만 말하고, 다 말하면 [BEAT_PAUSE_MS] 쉬었다가 다음 장으로 넘긴다.
+     * 문장이 없는 장은 [SILENT_BEAT_MS] 동안 보여 준다. 연출이 다 끝나면 남은 마감 인사를 한다. 주행 중에는 멈춘다.
+     */
+    private fun playBeat() {
+        val id = ++beat
+        val c = _state.value.celebrations.firstOrNull()
+        beatRunning = c != null && !tracker.inTrip
+        if (tracker.inTrip) return
+        if (c == null) {
+            if (closingDue) voice.say(listOf(Announcements.CLOSING))
+            closingDue = false
+            return
+        }
+        val lines = c.lines()
+        val next = { scheduler.post(if (lines.isEmpty()) SILENT_BEAT_MS else BEAT_PAUSE_MS) { if (id == beat) advanceBeat() } }
+        if (lines.isEmpty()) next() else voice.say(lines, next)
+    }
+
+    private fun advanceBeat() {
+        _state.update { it.copy(celebrations = it.celebrations.drop(1)) }
+        playBeat()
     }
 
     private fun summary(all: List<TripRecord>) =
@@ -559,6 +602,10 @@ class DriveEngine(
         const val LIVE_TICK_MS = 1_000L
         const val JOURNAL_EXTRAS_MS = 15_000L
         const val QUEST_CONFIRM_MS = 3_000L
+        /** 축하 연출 한 장의 안내가 끝난 뒤 다음 장까지 쉬는 시간. */
+        const val BEAT_PAUSE_MS = 1_200L
+        /** 안내 문장이 없는 연출을 보여 주는 시간. */
+        const val SILENT_BEAT_MS = 3_500L
         /** 경로 위 휴게소가 이보다 가까우면 검색 화면 대신 '앞길에 휴게소' 안내만 한다. */
         const val REST_AREA_AHEAD_M = 30_000.0
     }

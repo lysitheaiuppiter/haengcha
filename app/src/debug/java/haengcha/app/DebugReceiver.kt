@@ -18,6 +18,7 @@ import haengcha.judge.RestRule
  * - 충전: --ez charging true|false. 에뮬레이터에서 충전 포트 신호를 흉내 낸다
  * - 지난 기록: --es seed ULSAN --ei seedDays 2 --ei seedMonthTrips 7 --ef seedKm 20. 단골 등급·동반자·옛길 원정 진행을 시연한다
  * - 전국 유람 기록: --ez seedTour true. 지역 도감·명소·칭호·동반자를 시연한다
+ * - 새 운전자: --ez newProfile true. 빈 기록으로 시연을 다시 찍을 때 새 운전자를 만들어 바꾼다(다른 옵션보다 먼저 처리)
  * - 역참: --es rest "1,0.5" (쉬지 않고 달린 분, 쉰 분). 두 시간·15분 기준을 줄여 시험한다
  * - 바깥 기온: --ef temp -3. 에뮬레이터는 25도로 고정이라 눈길을 시연할 때 쓴다. --ez tempReset true로 차량 값으로 돌린다
  * - 명소 경로: --es route DAEWANGAM. 내비게이션에 시연용 명소 좌표로 경로를 잡는다
@@ -26,6 +27,10 @@ class DebugReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val drive = (context.applicationContext as HaengchaApp).drive
+        if (intent.getBooleanExtra("newProfile", false)) {
+            drive.addProfile()
+            drive.state.value.profiles.lastOrNull()?.let { drive.switchProfile(it.id) }
+        }
         if (intent.hasExtra("charging")) drive.onChargePort(intent.getBooleanExtra("charging", false))
         if (intent.hasExtra("seed") || intent.hasExtra("seedMonthTrips") || intent.hasExtra("seedKm")) {
             val region = intent.getStringExtra("seed")?.let { runCatching { Region.valueOf(it) }.getOrNull() }

@@ -1,5 +1,5 @@
 /*
- * 도감 지역 12곳의 정차 화면 장면. stage.js의 무대(단상·조명·카메라)는 그대로 두고,
+ * 도감 지역 13곳의 정차 화면 장면. stage.js의 무대(단상·조명·카메라)는 그대로 두고,
  * 단상 왼쪽 뒤(횡성 한우 자리)에 지역 상징을 three.js 기본 도형으로 빚어 세우고 하늘·먼 풍경은 2D로 그린다.
  * 지역마다 다음을 둔다.
  *  - key: 주 조명 색
@@ -1404,5 +1404,193 @@
     },
   };
 
-  Object.assign(window.TOWNS, { seoul, busan, daegu, incheon, gwangju, daejeon, gyeongju, jeonju, gangneung, jeju, yeosu, andong });
+  // ---------------- 청주: 직지 금속활자, 상당산성, 무심천 벚꽃 ----------------
+
+  /** 직지 책장 그림: 광곽(테두리)과 계선 사이에 세로로 박은 한자. [colophon]이 있으면 왼쪽 끝 줄에 간기(흥덕사 주자 인시)를 넣는다. */
+  function jikjiPage(seed, colophon) {
+    const W = 512, H = 704, X0 = 40, Y0 = 50, CW = 432, CH = 604, COLS = 7, ROWS = 12;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    const rnd = mulberry32(seed);
+    g.fillStyle = '#EFE2C2'; g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(150,110,60,${rnd() * 0.06})`; g.beginPath(); g.arc(rnd() * W, rnd() * H, 10 + rnd() * 50, 0, TAU); g.fill(); }
+    g.strokeStyle = '#3A2A1C'; g.lineWidth = 6; g.strokeRect(X0, Y0, CW, CH);
+    g.lineWidth = 2;
+    const cw = CW / COLS, rh = CH / ROWS;
+    for (let k = 1; k < COLS; k++) { g.beginPath(); g.moveTo(X0 + k * cw, Y0); g.lineTo(X0 + k * cw, Y0 + CH); g.stroke(); }
+    const chars = '白雲和尚抄錄佛祖直指心體要節古今山水月明風淸道人見性成佛如是我聞一切衆生本來無';
+    const lines = colophon ? ['宣光七年丁巳七月日', '淸州牧外興德寺鑄字'] : [];
+    g.fillStyle = '#2A1E14'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = `bold ${Math.round(cw * 0.7)}px "Batang", "BatangChe", "Malgun Gothic", serif`;
+    // 세로쓰기는 오른쪽 줄부터 읽는다
+    for (let k = 0; k < COLS; k++) {
+      const x = X0 + (COLS - k - 0.5) * cw;
+      const fixed = k >= COLS - lines.length ? lines[k - (COLS - lines.length)] : null;
+      const n = fixed ? Math.min(fixed.length, ROWS) : 7 + Math.floor(rnd() * 6);
+      for (let r = 0; r < n; r++) {
+        // 금속활자는 먹이 고르지 않게 묻는다
+        g.globalAlpha = 0.72 + rnd() * 0.28;
+        g.fillText(fixed ? fixed[r] : chars[Math.floor(rnd() * chars.length)], x + (rnd() - 0.5) * 2, Y0 + (r + 0.55) * rh);
+      }
+    }
+    g.globalAlpha = 1;
+    const t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; t.anisotropy = 8;
+    return t;
+  }
+  /** 무심천 둑의 벚나무 줄. */
+  function cherryRow(w, h, wide) {
+    const rnd = mulberry32(88), n = wide ? 10 : 6, trees = [];
+    for (let i = 0; i < n; i++) {
+      const s = 0.6 + rnd() * 0.6;
+      // 가지 끝마다 꽃송이를 모은다(둥근 공 하나로 보이지 않게)
+      const tips = Array.from({ length: 4 }, (_, k) => [((k / 3) - 0.5) * 0.09 * s + (rnd() - 0.5) * 0.02, (0.04 + rnd() * 0.035) * s]);
+      const blobs = tips.flatMap(([tx, ty]) => Array.from({ length: 6 }, () => [tx + (rnd() - 0.5) * 0.035 * s, ty + (rnd() - 0.4) * 0.03 * s, (0.007 + rnd() * 0.009) * s, rnd()]));
+      trees.push({ x: (i + 0.15 + rnd() * 0.7) / n * w, s, tips, blobs });
+    }
+    return trees;
+  }
+  function drawCherries(g, trees, h, baseY) {
+    trees.forEach((tr) => {
+      const trunkTop = baseY - h * 0.03 * tr.s;
+      g.strokeStyle = '#2E2228'; g.lineWidth = Math.max(1, h * 0.003 * tr.s);
+      g.beginPath(); g.moveTo(tr.x, baseY); g.lineTo(tr.x, trunkTop); g.stroke();
+      g.lineWidth = Math.max(1, h * 0.0016 * tr.s);
+      tr.tips.forEach(([dx, dy]) => { g.beginPath(); g.moveTo(tr.x, trunkTop); g.quadraticCurveTo(tr.x + dx * h * 0.3, trunkTop - dy * h * 0.5, tr.x + dx * h, baseY - dy * h - h * 0.012); g.stroke(); });
+      tr.blobs.forEach(([dx, dy, r, k]) => {
+        g.fillStyle = `rgba(${(238 + k * 17) | 0},${(178 + k * 52) | 0},${(198 + k * 40) | 0},0.85)`;
+        g.beginPath(); g.arc(tr.x + dx * h, baseY - dy * h - h * 0.012, r * h, 0, TAU); g.fill();
+      });
+      // 물에 비친 꽃
+      g.fillStyle = 'rgba(240,180,200,0.2)';
+      g.beginPath(); g.ellipse(tr.x, baseY + h * 0.018, h * 0.035 * tr.s, h * 0.007, 0, 0, TAU); g.fill();
+    });
+  }
+  /** 흩날리는 벚꽃잎. 루프마다 화면 위에서 아래로 정수 번 지나간다. */
+  function petalList(w, h, n, seed) {
+    const rnd = mulberry32(seed);
+    return Array.from({ length: n }, () => ({ x: rnd() * w * 1.1, p: rnd(), n: 1 + Math.floor(rnd() * 2), a: h * (0.01 + rnd() * 0.03), f: 0.3 + rnd() * 0.6, r: h * (0.004 + rnd() * 0.004), q: rnd() * TAU }));
+  }
+  function drawPetals(g, list, w, h, t) {
+    list.forEach((pt) => {
+      const u = t == null ? pt.p : cyc(t, pt.n, pt.p);
+      const tt = t ?? 0;
+      const x = pt.x - u * w * 0.08 + Math.sin(tt * fq(pt.f) + pt.q) * pt.a;
+      const y = -h * 0.05 + u * h * 1.1;
+      const rot = pt.q + tt * fq(pt.f * 2);
+      g.save(); g.translate(x, y); g.rotate(rot);
+      g.fillStyle = 'rgba(255,208,222,0.88)';
+      g.beginPath(); g.ellipse(0, 0, pt.r * 1.4, pt.r * (0.25 + 0.75 * Math.abs(Math.cos(rot * 1.7))), 0, 0, TAU); g.fill();
+      g.restore();
+    });
+  }
+  const cheongju = {
+    key: 0xffd2c4,
+    paint(g, w, h, wide, geo, animated) {
+      const { horizonY: hy, pool } = geo;
+      sky(g, w, hy, [[0, '#2A2452'], [0.45, '#6E5487'], [0.8, '#D99AA2'], [1, '#F4C3A6']]);
+      bokeh(g, w * (wide ? 0.3 : 0.25), hy - h * 0.06, h * 0.22, 0.35, '255,200,170');
+      // 먼 산
+      g.fillStyle = '#6B5784'; g.beginPath(); g.moveTo(0, hy);
+      for (let x = 0; x <= w; x += 4) g.lineTo(x, hy - h * (0.075 + 0.03 * Math.sin((x / w) * 7 + 2)));
+      g.lineTo(w, hy); g.closePath(); g.fill();
+      // 상당산성 능선
+      const top = (x) => hy - h * (0.12 + 0.035 * Math.sin((x / w) * 5 + 0.6) + 0.012 * Math.sin((x / w) * 17));
+      g.fillStyle = '#4C3F62'; g.beginPath(); g.moveTo(0, hy);
+      for (let x = 0; x <= w; x += 4) g.lineTo(x, top(x));
+      g.lineTo(w, hy); g.closePath(); g.fill();
+      // 능선을 따라 낮게 쌓은 돌 성벽. 여장 사이 좁은 틈(총안)만 어둡게 둔다
+      const from = w * (wide ? 0.45 : 0.32), wallH = h * 0.011, step = Math.max(2, h * 0.002), gap = h * 0.024;
+      for (let x = from; x < w * 0.97; x += step) {
+        const y = top(x) + h * 0.006;
+        g.fillStyle = '#857A70'; g.fillRect(x, y - wallH, step + 0.5, wallH);
+        g.fillStyle = 'rgba(255,205,175,0.35)'; g.fillRect(x, y - wallH, step + 0.5, Math.max(1, h * 0.0015));
+        if ((x - from) % gap < step) { g.fillStyle = '#3A3040'; g.fillRect(x, y - wallH, step, wallH * 0.45); }
+      }
+      // 공남문: 성문 홍예와 문루
+      const gx = w * (wide ? 0.74 : 0.7), gy = top(gx) + h * 0.006 - wallH;
+      const gw = h * 0.075, gh = h * 0.02;
+      g.fillStyle = '#1C1620'; g.beginPath(); g.arc(gx, gy + wallH, wallH * 0.62, Math.PI, 0); g.fill();
+      g.fillStyle = '#6E3B2C'; g.fillRect(gx - gw * 0.4, gy - gh, gw * 0.8, gh);
+      g.fillStyle = 'rgba(255,190,120,0.75)'; for (let k = 0; k < 4; k++) g.fillRect(gx - gw * 0.33 + k * gw * 0.19, gy - gh * 0.75, gw * 0.08, gh * 0.4);
+      g.fillStyle = '#2B2230'; g.beginPath(); g.moveTo(gx - gw * 0.65, gy - gh + h * 0.003);
+      g.quadraticCurveTo(gx - gw * 0.42, gy - gh - h * 0.004, gx - gw * 0.3, gy - gh - h * 0.02);
+      g.lineTo(gx + gw * 0.3, gy - gh - h * 0.02);
+      g.quadraticCurveTo(gx + gw * 0.42, gy - gh - h * 0.004, gx + gw * 0.65, gy - gh + h * 0.003);
+      g.closePath(); g.fill();
+      bokeh(g, gx, gy - gh * 0.5, h * 0.04, 0.35, '255,190,120');
+      // 무심천과 물결 빛
+      vgrad(g, 0, hy - h * 0.004, w, hy + h * 0.035, [[0, '#C9A3B8'], [1, '#6C5A7A']]);
+      const rnd = mulberry32(14);
+      for (let i = 0; i < (wide ? 60 : 35); i++) { g.fillStyle = `rgba(255,220,225,${0.15 + rnd() * 0.3})`; g.fillRect(rnd() * w, hy + rnd() * h * 0.03, h * (0.01 + rnd() * 0.02), Math.max(1, h * 0.0012)); }
+      drawCherries(g, cherryRow(w, h, wide), h, hy - h * 0.002);
+      ground(g, w, h, hy + h * 0.035, [[0, '#56583E'], [0.4, '#35362A'], [1, '#10100C']]);
+      strokes(g, w, h, hy + h * 0.035, 52, 450, ['170,180,130', '30,32,20'], 0.003, 0.01);
+      // 땅에 내려앉은 꽃잎
+      for (let i = 0; i < (wide ? 160 : 90); i++) { g.fillStyle = `rgba(255,205,220,${0.35 + rnd() * 0.4})`; g.beginPath(); g.ellipse(rnd() * w, hy + h * 0.04 + rnd() * (h - hy) * 0.9, h * 0.004, h * 0.0022, rnd() * TAU, 0, TAU); g.fill(); }
+      if (!animated) drawPetals(g, petalList(w, h, wide ? 70 : 40, 61), w, h, null);
+      floorPool(g, pool, 'rgba(255,205,190,0.28)', 'rgba(210,150,150,0.10)');
+    },
+    async build(scene, layout, animated) {
+      const wood = mat('#6B4226', { rough: 0.5, env: 0.6 });
+      const dark = mat('#3E2414', { rough: 0.6 });
+      const cover = mat('#B08A3E', { rough: 0.75 });
+      const edge = mat('#E6D6B0', { rough: 0.9 });
+      const bronze = mat('#9C7A3C', { metal: 0.85, rough: 0.35, env: 1.1 });
+      const glint = mat('#B8923F', { metal: 0.85, rough: 0.25, env: 1.2, emissive: '#FFC870', ei: 0.4 });
+      const pageL = mat('#FFFFFF', { rough: 0.85, map: jikjiPage(7, true), double: true });
+      const pageR = mat('#FFFFFF', { rough: 0.85, map: jikjiPage(3, false), double: true });
+      const pageT = mat('#FFFFFF', { rough: 0.85, map: jikjiPage(11, false), double: true });
+      const D = 0.8; // 서안 윗면 높이
+      // 서안: 양 끝이 말려 올라간 낮은 책상
+      const desk = group(
+        box(2.3, 0.08, 1.3, wood, [0, D - 0.04, 0]),
+        box(0.08, 0.12, 1.3, wood, [-1.15, D + 0.02, 0]), box(0.08, 0.12, 1.3, wood, [1.15, D + 0.02, 0]),
+        ...[[-1, -1], [-1, 1], [1, -1], [1, 1]].map(([sx, sz]) => box(0.09, D - 0.08, 0.09, dark, [sx * 1.0, (D - 0.08) / 2, sz * 0.52])),
+      );
+      // 펼친 책: 평평하게 만들어 경상 기울기만큼 세운다. 책등이 가운데, 바깥으로 갈수록 살짝 들린다
+      const half = (side, m) => {
+        const gp = group(box(0.76, 0.06, 1.02, edge, [0, 0.03, 0]), mesh(new T.PlaneGeometry(0.74, 1.0), m, [0, 0.061, 0], [-Math.PI / 2, 0, 0]));
+        gp.position.set(side * 0.39, 0.03, 0); gp.rotation.z = side * 0.07;
+        return gp;
+      };
+      // 바람에 들썩이는 한 장: 책등을 축으로 오른쪽 장이 들린다
+      const flip = new T.Group(); flip.position.set(0, 0.072, 0);
+      flip.add(mesh(new T.PlaneGeometry(0.74, 1.0), pageT, [0.37, 0, 0], [-Math.PI / 2, 0, 0]));
+      const book = group(box(1.64, 0.03, 1.1, cover, [0, 0.015, 0]), half(-1, pageL), half(1, pageR), flip);
+      const lectern = group(box(1.72, 0.05, 1.16, wood, [0, -0.025, 0]), box(1.72, 0.08, 0.06, wood, [0, 0.02, 0.6]), book);
+      lectern.rotation.x = 0.95; lectern.position.set(0, D + 0.52, -0.12);
+      const legs = group(
+        rod([-0.7, D, -0.48], [-0.7, D + 0.95, -0.42], 0.03, dark), rod([0.7, D, -0.48], [0.7, D + 0.95, -0.42], 0.03, dark),
+        rod([-0.7, D + 0.02, -0.48], [0.7, D + 0.02, -0.48], 0.025, dark),
+      );
+      // 금속활자 판: 구리빛 낱자 18개, 몇 개는 빛을 받아 반짝인다
+      const tray = group(box(0.8, 0.05, 0.42, dark, [0, 0.025, 0]));
+      const rnd = mulberry32(5);
+      const glints = [];
+      for (let i = 0; i < 6; i++) {
+        for (let j = 0; j < 3; j++) {
+          const lit = (i * 3 + j) % 7 === 2;
+          const m = lit ? glint.clone() : bronze;
+          if (lit) glints.push(m);
+          tray.add(box(0.085, 0.085 + rnd() * 0.01, 0.085, m, [-0.275 + i * 0.11, 0.09, -0.11 + j * 0.11], [0, (rnd() - 0.5) * 0.15, 0]));
+        }
+      }
+      tray.position.set(-0.55, D, 0.4);
+      // 붓 한 자루
+      const brush = group(rod([0.45, D + 0.03, 0.5], [0.98, D + 0.03, 0.32], 0.02, mat('#C9A060', { rough: 0.6 })), cone(0.035, 0.12, mat('#1A1410', { rough: 0.9 }), [0.4, D + 0.03, 0.52], [0, 0, Math.PI / 2 + 0.33]));
+      // 세로 화면에서는 서안이 넓어 왼쪽 끝에 걸리지 않게 조금 안쪽에 둔다
+      place(scene, group(desk, lectern, legs, tray, brush), layout, { fit: 2.6, yaw: 0.45, at: layout === 'portrait' ? [-1.5, 0, -7.9] : undefined });
+      if (!animated) { flip.rotation.z = 0.4; return () => {}; }
+      return (t) => {
+        flip.rotation.z = 0.07 + 1.2 * Math.sin(Math.PI * cyc(t, 2)) ** 4;
+        glints.forEach((m, k) => { m.emissiveIntensity = 0.15 + 0.6 * Math.max(0, Math.sin(t * fq(1.3) + k * 2.1)) ** 3; });
+      };
+    },
+    fx(w, h, wide) {
+      const petals = petalList(w, h, wide ? 70 : 40, 61);
+      return (g, t) => drawPetals(g, petals, w, h, t);
+    },
+  };
+
+  Object.assign(window.TOWNS, { seoul, busan, daegu, incheon, gwangju, daejeon, gyeongju, jeonju, gangneung, jeju, yeosu, andong, cheongju });
 })();

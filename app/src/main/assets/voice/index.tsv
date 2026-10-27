@@ -66,6 +66,33 @@ Lv.20 달성!	level_20.ogg
 옛길 원정, 밀양 영남루에 이르렀습니다.	station_miryang.ogg
 옛길 원정, 양산에 이르렀습니다.	station_yangsan.ogg
 옛길 원정, 동래에 이르렀습니다.	station_dongnae.ogg
+옛길 원정, 남태령에 이르렀습니다.	station_namtaeryeong.ogg
+옛길 원정, 수원 화성행궁에 이르렀습니다.	station_suwon.ogg
+옛길 원정, 진위에 이르렀습니다.	station_jinwi.ogg
+옛길 원정, 천안삼거리에 이르렀습니다.	station_cheonan.ogg
+옛길 원정, 공주 금강나루에 이르렀습니다.	station_gongju.ogg
+옛길 원정, 은진에 이르렀습니다.	station_eunjin.ogg
+옛길 원정, 삼례에 이르렀습니다.	station_samnye.ogg
+옛길 원정, 전주 전라감영에 이르렀습니다.	station_jeonju.ogg
+옛길 원정, 정읍에 이르렀습니다.	station_jeongeup.ogg
+옛길 원정, 장성 갈재에 이르렀습니다.	station_galjae.ogg
+옛길 원정, 나주 금성관에 이르렀습니다.	station_naju.ogg
+옛길 원정, 영암에 이르렀습니다.	station_yeongam.ogg
+옛길 원정, 해남에 이르렀습니다.	station_haenam.ogg
+옛길 원정, 망우리 고개에 이르렀습니다.	station_mangu.ogg
+옛길 원정, 평구역에 이르렀습니다.	station_pyeonggu.ogg
+옛길 원정, 양근나루에 이르렀습니다.	station_yanggeun.ogg
+옛길 원정, 원주 강원감영에 이르렀습니다.	station_wonju.ogg
+옛길 원정, 안흥에 이르렀습니다.	station_anheung.ogg
+옛길 원정, 진부에 이르렀습니다.	station_jinbu.ogg
+옛길 원정, 대관령에 이르렀습니다.	station_daegwallyeong.ogg
+옛길 원정, 강릉 경포대에 이르렀습니다.	station_gyeongpodae.ogg
+옛길 원정, 삼척 죽서루에 이르렀습니다.	station_jukseoru.ogg
+옛길 원정, 울진에 이르렀습니다.	station_uljin.ogg
+옛길 원정, 평해 월송정에 이르렀습니다.	station_pyeonghae.ogg
+영남대로 완주! 다음 길은 삼남대로입니다.	road_yeongnam.ogg
+삼남대로 완주! 다음 길은 관동대로입니다.	road_samnam.ogg
+관동대로 완주! 다음 길은 영남대로입니다.	road_gwandong.ogg
 대왕암공원 도착! 스탬프를 찍었습니다.	stamp_daewangam.ogg
 장생포 고래문화마을 도착! 스탬프를 찍었습니다.	stamp_jangsaengpo.ogg
 태화강 국가정원 도착! 스탬프를 찍었습니다.	stamp_taehwagang.ogg
@@ -97,6 +124,9 @@ N서울타워 도착! 스탬프를 찍었습니다.	stamp_n_seoul_tower.ogg
 이순신광장 도착! 스탬프를 찍었습니다.	stamp_yi_sunsin_square.ogg
 하회마을 도착! 스탬프를 찍었습니다.	stamp_hahoe.ogg
 월영교 도착! 스탬프를 찍었습니다.	stamp_wolyeonggyo.ogg
+청주고인쇄박물관 도착! 스탬프를 찍었습니다.	stamp_goinswae.ogg
+상당산성 도착! 스탬프를 찍었습니다.	stamp_sangdang.ogg
+수암골 도착! 스탬프를 찍었습니다.	stamp_suamgol.ogg
 서울에 오셨습니다. 한양 도성 행차입니다.	region_seoul.ogg
 부산에 오셨습니다. 파도 소리가 반깁니다.	region_busan.ogg
 대구에 오셨습니다. 사과 향이 반깁니다.	region_daegu.ogg
@@ -109,6 +139,7 @@ N서울타워 도착! 스탬프를 찍었습니다.	stamp_n_seoul_tower.ogg
 제주에 오셨습니다. 돌하르방이 반깁니다.	region_jeju.ogg
 여수에 오셨습니다. 밤바다가 반깁니다.	region_yeosu.ogg
 안동에 오셨습니다. 하회탈이 웃으며 반깁니다.	region_andong.ogg
+청주에 오셨습니다. 금속활자 직지의 고장입니다.	region_cheongju.ogg
 지역 도감에 울산 고래가 올랐습니다.	collect_ulsan.ogg
 지역 도감에 횡성 한우가 올랐습니다.	collect_hoengseong.ogg
 지역 도감에 서울 해치가 올랐습니다.	collect_seoul.ogg
@@ -123,6 +154,7 @@ N서울타워 도착! 스탬프를 찍었습니다.	stamp_n_seoul_tower.ogg
 지역 도감에 제주 돌하르방이 올랐습니다.	collect_jeju.ogg
 지역 도감에 여수 밤바다가 올랐습니다.	collect_yeosu.ogg
 지역 도감에 안동 하회탈이 올랐습니다.	collect_andong.ogg
+지역 도감에 청주 직지가 올랐습니다.	collect_cheongju.ogg
 단골 등급이 올랐습니다. 서울 길손입니다.	grade_seoul_1.ogg
 단골 등급이 올랐습니다. 서울 단골손님입니다.	grade_seoul_2.ogg
 단골 등급이 올랐습니다. 서울 이웃사촌입니다.	grade_seoul_3.ogg
@@ -171,6 +203,10 @@ N서울타워 도착! 스탬프를 찍었습니다.	stamp_n_seoul_tower.ogg
 단골 등급이 올랐습니다. 안동 단골손님입니다.	grade_andong_2.ogg
 단골 등급이 올랐습니다. 안동 이웃사촌입니다.	grade_andong_3.ogg
 단골 등급이 올랐습니다. 안동 명예 주민입니다.	grade_andong_4.ogg
+단골 등급이 올랐습니다. 청주 길손입니다.	grade_cheongju_1.ogg
+단골 등급이 올랐습니다. 청주 단골손님입니다.	grade_cheongju_2.ogg
+단골 등급이 올랐습니다. 청주 이웃사촌입니다.	grade_cheongju_3.ogg
+단골 등급이 올랐습니다. 청주 명예 주민입니다.	grade_cheongju_4.ogg
 새 칭호를 얻었습니다. 첫 행차.	title_first_trip.ogg
 새 칭호를 얻었습니다. 길 위의 선비.	title_trips_30.ogg
 새 칭호를 얻었습니다. 백 리 나그네.	title_li_100.ogg
@@ -192,13 +228,14 @@ N서울타워 도착! 스탬프를 찍었습니다.	stamp_n_seoul_tower.ogg
 새 칭호를 얻었습니다. 고을의 자랑.	title_regular_top.ogg
 새 칭호를 얻었습니다. 새재 넘은 나그네.	title_joryeong.ogg
 새 칭호를 얻었습니다. 영남대로 완주자.	title_yeongnam.ogg
+새 칭호를 얻었습니다. 삼남대로 완주자.	title_samnam.ogg
 새 칭호를 얻었습니다. 금요일의 해방자.	title_friday_5.ogg
 새 칭호를 얻었습니다. 새벽 출근 장인.	title_dawn_3.ogg
 새 칭호를 얻었습니다. 어린이의 수호신.	title_guardian_50.ogg
 새 칭호를 얻었습니다. 만석꾼.	title_rice_100.ogg
 새 칭호를 얻었습니다. 백일 개근 영의정.	title_streak_100.ogg
 새 칭호를 얻었습니다. 만 리 행차꾼.	title_li_10000.ogg
-새 칭호를 얻었습니다. 영남대로 삼세번.	title_yeongnam_3.ogg
+새 칭호를 얻었습니다. 삼대로 대장정.	title_roads_all.ogg
 새 칭호를 얻었습니다. 방방곡곡 대장정.	title_regions_all.ogg
 새 칭호를 얻었습니다. 명소 도감 완성.	title_stamps_all.ogg
 새 칭호를 얻었습니다. 어사또.	title_mapae_30.ogg

@@ -36,7 +36,7 @@ import org.json.JSONObject
  * 3. 탈것 레이어(assets/scenes/vehicle_<테마>.webp): 단상 위 지금 테마 탈것(투명 배경).
  *    [rear](주행 중)면 vehicle_<테마>_rear.webp: 단상 없이 배경 지평선의 정면 소실점으로 달려가는 뒷모습
  * 배경은 지역 밖이면 궁궐 마당, 울산이면 밤바다와 고래, 횡성이면 들판과 한우이고 고래 빛깔·한우 메달은 단골 등급([grade])을 따른다.
- * 도감 지역 12곳은 지역마다 상징 모형을 세운 장면 하나를 쓴다.
+ * 도감 지역 13곳은 지역마다 상징 모형을 세운 장면 하나를 쓴다.
  * 그림과 영상은 tools/render3d로 Blender 모델을 three.js에서 렌더한 것이다. landscape는 탈것이 오른쪽(왼쪽은 카드 자리),
  * portrait는 아래쪽에 있다.
  */

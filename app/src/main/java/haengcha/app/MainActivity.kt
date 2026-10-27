@@ -1,5 +1,6 @@
 package haengcha.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -55,6 +56,12 @@ class MainActivity : ComponentActivity() {
         if (!app.hasVehiclePermissions() || !app.drive.state.value.locating) requestPermissions()
         // 처음 열릴 때 가운데 칸이면 내비게이션을 가운데로 부르고 행차는 오른쪽으로 비킨다
         if (savedInstanceState == null && app.prefs.naviCenter) arrangeWithNavi()
+    }
+
+    /** 떠 있는 행차를 아이콘으로 다시 열면 Pleos 홈이 가운데 칸으로 데려오므로 같은 배치를 다시 맞춘다. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (app.prefs.naviCenter) arrangeWithNavi()
     }
 
     /**

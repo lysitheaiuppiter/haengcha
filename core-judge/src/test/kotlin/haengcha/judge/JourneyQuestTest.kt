@@ -16,19 +16,44 @@ class JourneyQuestTest {
         assertEquals(Station.PANGYO, j.reached)
         assertEquals(Station.YONGIN, j.next)
         assertEquals(10.0, j.kmToNext, 1e-9)
-        val second = journey(380.0 + 25.0)
-        assertEquals(1, second.lap)
-        assertEquals(Station.PANGYO, second.reached)
+        assertEquals(Road.YEONGNAM, j.road)
         assertEquals(Station.DONGNAE, journey(379.9).next)
-        assertEquals(Station.HANYANG, journey(380.0).reached, "동래에 닿으면 한양에서 다시 떠난다")
+        // 동래에 닿으면 삼남대로를 한양에서 떠나고, 해남 다음은 관동대로다
+        val samnam = journey(380.0 + 25.0)
+        assertEquals(Road.SAMNAM, samnam.road)
+        assertEquals(0, samnam.lap)
+        assertEquals(Station.NAMTAERYEONG, samnam.reached)
+        assertEquals(Station.SUWON, samnam.next)
+        assertEquals(Station.SAMNAM_GATE, journey(380.0).reached)
+        assertEquals(Road.GWANDONG, journey(780.0).road)
+        assertTrue(journey(800.0).done(Road.SAMNAM))
+        // 세 길을 다 걸으면 영남대로부터 두 바퀴째
+        val again = journey(Road.CYCLE_KM + 25.0)
+        assertEquals(1, again.lap)
+        assertEquals(Road.YEONGNAM, again.road)
+        assertEquals(Station.PANGYO, again.reached)
     }
 
     @Test
-    fun `이번 주행으로 새로 닿은 지점을 바퀴를 넘어 센다`() {
+    fun `길마다 도착 지점 거리가 길 길이와 같고 지점은 출발점에서 멀어진다`() {
+        assertEquals(1140, Road.CYCLE_KM)
+        Road.entries.forEach { r ->
+            assertEquals(r.km, r.destination.km, "$r")
+            assertEquals(0, r.stations.first().km)
+            assertEquals(r.stations.map { it.km }.sorted(), r.stations.map { it.km })
+            assertEquals(null, r.destination.next)
+        }
+        assertEquals(780, Station.HEUNGINJIMUN.totalKm)
+    }
+
+    @Test
+    fun `이번 주행으로 새로 닿은 지점을 길과 바퀴를 넘어 센다`() {
         assertEquals(listOf(Station.PANGYO), stationsReached(20.0, 25.0))
         assertEquals(emptyList(), stationsReached(22.0, 30.0), "이미 지난 판교는 다시 세지 않는다")
-        assertEquals(listOf(Station.YANGSAN, Station.DONGNAE, Station.PANGYO), stationsReached(360.0, 405.0))
+        assertEquals(listOf(Station.YANGSAN, Station.DONGNAE, Station.NAMTAERYEONG), stationsReached(360.0, 405.0), "출발점은 세지 않는다")
+        assertEquals(listOf(Station.PYEONGHAE, Station.PANGYO), stationsReached(1130.0, 1165.0))
         assertEquals(emptyList(), stationsReached(10.0, 10.0))
+        assertEquals(14 + 13, journey(780.0).stamps)
     }
 
     @Test
@@ -131,16 +156,14 @@ class JourneyQuestTest {
     }
 
     @Test
-    fun `주차 후 안내에 새 문장을 넣는다`() {
+    fun `검약·눈길·명소·옛길 기록이 진행에 반영되고 문장마다 녹음이 있다`() {
         val day = LocalDate.of(2026, 10, 27)
         val before = summarize(listOf(TripRecord(0, 0, day, 20.0, 20.0, 10, 0, 0, 5, 0)), day)
         val record = TripRecord(0, 0, day, 5.0, 10.0, 10, 0, 0, 5, 0, eco = true, weather = Weather.SNOW, weatherCalm = true, stamp = Landmark.PUNGSUWON)
         val after = summarize(listOf(TripRecord(0, 0, day, 20.0, 20.0, 10, 0, 0, 5, 0), record), day)
-        val lines = Announcements.tripEndLines(TripResult(5.0, 10.0, 5, 0, 50, emptyList()), before, after, record = record)
-        assertEquals(
-            listOf(Announcements.ECO, Announcements.SNOW_CALM, Announcements.stamped(Landmark.PUNGSUWON), Announcements.stationReached(Station.PANGYO), Announcements.CLOSING),
-            lines,
-        )
+        assertEquals(listOf(Station.PANGYO), stationsReached(before.journey.totalKm, after.journey.totalKm))
+        assertEquals(setOf(Landmark.PUNGSUWON), after.stamps)
+        val lines = listOf(Announcements.ECO, Announcements.SNOW_CALM, Announcements.stamped(Landmark.PUNGSUWON), Announcements.stationReached(Station.PANGYO))
         assertTrue(Announcements.all().containsAll(lines))
     }
 }

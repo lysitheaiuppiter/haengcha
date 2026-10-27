@@ -35,19 +35,20 @@ enum class Title(val label: String, val emoji: String, val desc: String, val tie
     SMITH_3("대장간 단골", "⚒️", "대장간 퀘스트 3번 완료", 2),
     STAMP_5("명소 수집가", "🏮", "명소 스탬프 5곳", 2),
     TOWN_ALL("명소 완주", "🎖️", "한 지역의 명소를 모두 방문", 3),
-    REGIONS_7("팔도 유람객", "🗺️", "지역 도감 7곳(절반)", 3),
+    REGIONS_7("팔도 유람객", "🗺️", "지역 도감 7곳", 3),
     REGULAR_TOP("고을의 자랑", "⭐", "한 지역 최고 단골 등급", 4),
     JORYEONG("새재 넘은 나그네", "⛰️", "옛길 원정 문경새재 조령관", 3),
     YEONGNAM("영남대로 완주자", "🏆", "옛길 원정 동래 도착", 4),
+    SAMNAM("삼남대로 완주자", "🌾", "영남대로 다음 길, 해남 도착", 4),
     FRIDAY_5("금요일의 해방자", "🎉", "금요일 저녁(17~22시) 주행 5번", 2),
     DAWN_3("새벽 출근 장인", "🌅", "새벽 6시 전 출발 3번", 2),
     GUARDIAN_50("어린이의 수호신", "🧸", "어린이보호구역을 천천히 50번", 4),
     RICE_100("만석꾼", "💰", "곳간 쌀 100섬", 4),
     STREAK_100("백일 개근 영의정", "🏛️", "안전주행 개근 100일", 5),
     LI_10000("만 리 행차꾼", "🌏", "누적 4,000km(만 리)", 5),
-    YEONGNAM_3("영남대로 삼세번", "🏇", "옛길 원정 세 바퀴(1,140km)", 5),
-    REGIONS_ALL("방방곡곡 대장정", "🧭", "지역 도감 14곳 모두", 5),
-    STAMPS_ALL("명소 도감 완성", "📚", "명소 스탬프 31곳 모두", 5),
+    ROADS_ALL("삼대로 대장정", "🏇", "영남·삼남·관동대로 모두 완주(1,140km)", 5),
+    REGIONS_ALL("방방곡곡 대장정", "🧭", "지역 도감 15곳 모두", 5),
+    STAMPS_ALL("명소 도감 완성", "📚", "명소 스탬프 34곳 모두", 5),
     MAPAE_30("어사또", "🕵️", "마패 30개", 5),
     TOP_3("삼도 명예 주민", "🏯", "세 지역에서 최고 단골 등급", 5),
     RAINY_NIGHT("비 오는 밤의 나그네", "☂️", "비 오는 밤길을 급조작 없이 달림", 3, hidden = true),
@@ -77,7 +78,7 @@ enum class Buddy(val label: String, val emoji: String, val condition: String, va
     TIGER("호랑이", "🐅", "마패 3개", "호랑이가 암행어사의 호위로 합류했습니다.", Rarity.RARE),
     DOKKAEBI("도깨비", "👹", "옛길 문경새재 넘기", "문경새재 도깨비가 행차에 합류했습니다.", Rarity.RARE),
     DRAGON("청룡", "🐉", "안전주행 개근 100일", "전설의 청룡이 구름을 타고 행차에 합류했습니다.", Rarity.LEGEND),
-    PHOENIX("봉황", "🦚", "지역 도감 14곳 모두", "전설의 봉황이 날아와 행차에 합류했습니다.", Rarity.LEGEND),
+    PHOENIX("봉황", "🦚", "지역 도감 15곳 모두", "전설의 봉황이 날아와 행차에 합류했습니다.", Rarity.LEGEND),
     GUMIHO("구미호", "🦊", "누적 4,000km(만 리)", "전설의 구미호가 만 리 길을 따라 행차에 합류했습니다.", Rarity.LEGEND),
 }
 
@@ -109,15 +110,16 @@ fun titlesOf(records: List<TripRecord>, p: ProgressSummary, shieldsEarned: Int, 
         if (townDone) add(Title.TOWN_ALL)
         if (p.regulars.size >= 7) add(Title.REGIONS_7)
         if (p.regulars.any { it.grade == it.region.grades.lastIndex }) add(Title.REGULAR_TOP)
-        if (p.journey.totalKm >= Station.JORYEONG.km) add(Title.JORYEONG)
-        if (p.journey.totalKm >= Station.TOTAL_KM) add(Title.YEONGNAM)
+        if (p.journey.totalKm >= Station.JORYEONG.totalKm) add(Title.JORYEONG)
+        if (p.journey.totalKm >= Station.DONGNAE.totalKm) add(Title.YEONGNAM)
+        if (p.journey.totalKm >= Station.HAENAM.totalKm) add(Title.SAMNAM)
         if (friday >= 5) add(Title.FRIDAY_5)
         if (dawn >= 3) add(Title.DAWN_3)
         if (p.guardianCount >= 50) add(Title.GUARDIAN_50)
         if (p.rice >= 100) add(Title.RICE_100)
         if (p.bestStreak >= 100) add(Title.STREAK_100)
         if (km >= 4000) add(Title.LI_10000)
-        if (p.journey.totalKm >= 3.0 * Station.TOTAL_KM) add(Title.YEONGNAM_3)
+        if (p.journey.totalKm >= Road.CYCLE_KM) add(Title.ROADS_ALL)
         if (p.regulars.size == Region.entries.size) add(Title.REGIONS_ALL)
         if (p.stamps.size == Landmark.entries.size) add(Title.STAMPS_ALL)
         if (p.mapaeCount >= 30) add(Title.MAPAE_30)
@@ -145,7 +147,7 @@ fun Buddy.goal(p: ProgressSummary): Goal = when (this) {
     Buddy.MAGPIE -> Goal(p.stamps.size, 3)
     Buddy.SAPSAL -> Goal(p.guardianCount, 5)
     Buddy.TIGER -> Goal(p.mapaeCount, 3)
-    Buddy.DOKKAEBI -> Goal(p.journey.totalKm, Station.JORYEONG.km.toDouble())
+    Buddy.DOKKAEBI -> Goal(p.journey.totalKm, Station.JORYEONG.totalKm.toDouble())
     Buddy.DRAGON -> Goal(p.bestStreak, 100)
     Buddy.PHOENIX -> Goal(p.regulars.size, Region.entries.size)
     Buddy.GUMIHO -> Goal(p.totalKm, 4000.0)

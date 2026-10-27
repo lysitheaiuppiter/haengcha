@@ -1,6 +1,6 @@
 // 정차·주행 화면 그림을 만든다. three.js 무대(scene.html, stage.js)를 헤드리스 크롬(GPU)으로 찍는다.
 // - 움직이는 배경(motion/bg_*.mp4): 고래·등대·반딧불·초롱이 움직이는 11초 루프 영상. 앱이 반복 재생한다
-//   도감 지역 12곳(towns.js)은 지역 상징 모형이 선 장면 하나씩
+//   도감 지역 13곳(towns.js)은 지역 상징 모형이 선 장면 하나씩
 // - 정지 배경(scenes/bg_*.webp): 영상이 뜨기 전·재생 실패 때 대신 쓴다
 // - 탈것 레이어(scenes/vehicle_<테마>.webp, 투명): 배경 위에 겹친다
 // - 주행 화면 탈것 레이어(scenes/vehicle_<테마>_rear.webp, 투명): 단상 없이 화면 안쪽으로 달려가는 뒷모습
@@ -24,7 +24,7 @@ const assets = path.join(repo, 'app', 'src', 'main', 'assets');
 const THEMES = ['ox_cart', 'rickshaw', 'gama', 'kkotgama', 'eoga'];
 const GRADES = [0, 1, 2, 3, 4];
 // 도감 지역(towns.js)은 단골 등급과 상관없이 장면이 하나다
-const TOWNS = ['seoul', 'busan', 'daegu', 'incheon', 'gwangju', 'daejeon', 'gyeongju', 'jeonju', 'gangneung', 'jeju', 'yeosu', 'andong'];
+const TOWNS = ['seoul', 'busan', 'daegu', 'incheon', 'gwangju', 'daejeon', 'gyeongju', 'jeonju', 'gangneung', 'jeju', 'yeosu', 'andong', 'cheongju'];
 const SCENES = [
   { region: null, grade: 0, name: 'bg_palace' },
   ...['ulsan', 'hoengseong'].flatMap((region) => GRADES.map((grade) => ({ region, grade, name: `bg_${region}_${grade}` }))),

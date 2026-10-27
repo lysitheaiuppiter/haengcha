@@ -72,23 +72,22 @@ class CollectionTest {
     }
 
     @Test
-    fun `동반자가 합류하면 주차 후 안내하고 새 칭호도 말한다`() {
+    fun `다섯 번째 야행에 부엉이가 합류하고 칭호도 함께 얻는다`() {
         val before = summarize(List(4) { trip(friday, night = true) }, friday, zone = zone)
         val after = summarize(List(5) { trip(friday, night = true) }, friday, zone = zone)
         assertFalse(Buddy.OWL in before.buddies)
         assertTrue(Buddy.OWL in after.buddies)
-        val lines = Announcements.tripEndLines(TripResult(5.0, 10.0, 5, 0, 50, emptyList()), before, after)
-        assertTrue(Buddy.OWL.joinLine in lines)
-        assertTrue(Announcements.titleEarned(Title.NIGHT_5) in lines)
-        assertEquals(Announcements.CLOSING, lines.last())
+        assertFalse(Title.NIGHT_5 in before.titles)
+        assertTrue(Title.NIGHT_5 in after.titles)
     }
 
     @Test
     fun `처음 가 본 지역은 도감에 오르고 도감 지역 등급에는 지역 이름이 붙는다`() {
         val before = summarize(emptyList(), friday, zone = zone)
         val after = summarize(listOf(trip(friday, regions = setOf(Region.DAEJEON))), friday, zone = zone)
-        val lines = Announcements.tripEndLines(TripResult(5.0, 10.0, 5, 0, 50, emptyList()), before, after)
-        assertTrue("지역 도감에 대전 한빛탑이 올랐습니다." in lines)
+        assertTrue(before.regulars.none { it.region == Region.DAEJEON })
+        assertTrue(after.regulars.any { it.region == Region.DAEJEON })
+        assertEquals("지역 도감에 대전 한빛탑이 올랐습니다.", Announcements.regionCollected(Region.DAEJEON))
         assertEquals("지역 도감에 부산 바다가 올랐습니다.", Announcements.regionCollected(Region.BUSAN))
         assertEquals("단골 등급이 올랐습니다. 대전 길손입니다.", Announcements.gradeUp(Region.DAEJEON, 1))
         assertEquals("단골 등급이 올랐습니다. 동 고래입니다.", Announcements.gradeUp(Region.ULSAN, 1))

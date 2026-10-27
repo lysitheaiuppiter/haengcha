@@ -31,7 +31,7 @@ class HaengchaApp : Application() {
             PleosVehicleSignals(this),
             PleosNavi(this),
             LocationSource(this),
-            voice::say,
+            voice,
         )
         // 권한이 이미 있으면 화면을 열지 않아도 바로 수집을 시작한다
         if (hasVehiclePermissions()) drive.start()

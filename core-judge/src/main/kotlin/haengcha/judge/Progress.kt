@@ -228,12 +228,12 @@ object Announcements {
         Region.JEJU to "돌하르방이 반깁니다.",
         Region.YEOSU to "밤바다가 반깁니다.",
         Region.ANDONG to "하회탈이 웃으며 반깁니다.",
+        Region.CHEONGJU to "금속활자 직지의 고장입니다.",
     )
 
-    /** 주차 후 한 번에 말할 새 칭호 수. 나머지는 화면에만 보인다. */
-    const val MAX_TITLE_LINES = 2
     fun questOpened(quest: Quest) = "대장간 퀘스트입니다. ${quest.title}."
     fun stationReached(station: Station) = "옛길 원정, ${station.label}에 이르렀습니다."
+    fun roadDone(road: Road) = "${road.label} 완주! 다음 길은 ${road.next.label}입니다."
     fun stamped(landmark: Landmark) = "${landmark.label} 도착! 스탬프를 찍었습니다."
 
     /** 말할 수 있는 모든 문장. 녹음 파일이 빠짐없이 있는지 확인하는 데 쓴다. */
@@ -250,40 +250,7 @@ object Announcements {
             Title.entries.map(::titleEarned) +
             Buddy.entries.map(::buddyJoined) +
             Quest.entries.map(::questOpened) +
-            Station.entries.filter { it != Station.HANYANG }.map(::stationReached) +
+            Station.entries.filter { it.km > 0 }.map(::stationReached) +
+            Road.entries.map(::roadDone) +
             Landmark.entries.map(::stamped)
-
-    /**
-     * 주차 후에 한 번에 이어 말할 문장들. [guardian]은 이번 주행에서 아이 지킴이 보너스를 받은 횟수,
-     * [record]가 있으면 검약·빗길·명소·옛길·보호권 문장도 넣는다.
-     */
-    fun tripEndLines(
-        trip: TripResult,
-        before: ProgressSummary,
-        after: ProgressSummary,
-        guardian: Int = 0,
-        record: TripRecord? = null,
-    ): List<String> = buildList {
-        if (trip.mapae) add(MAPAE)
-        if (guardian > 0) add(GUARDIAN)
-        if (record != null) {
-            if (record.eco) add(ECO)
-            if (record.weatherCalm) add(if (record.weather == Weather.SNOW) SNOW_CALM else RAIN_CALM)
-            record.stamp?.let { add(stamped(it)) }
-            stationsReached(before.journey.totalKm, after.journey.totalKm).forEach { add(stationReached(it)) }
-            if (after.shieldsUsed > before.shieldsUsed) add(SHIELD_USED)
-        }
-        if (after.level > before.level) add(levelUp(after.level))
-        (after.themes - before.themes.toSet()).forEach { add(themeUnlocked(it)) }
-        after.regulars.forEach { now ->
-            val was = before.regulars.firstOrNull { it.region == now.region }
-            if (was == null) add(regionCollected(now.region)) else if (now.grade > was.grade) add(gradeUp(now.region, now.grade))
-        }
-        Buddy.entries.filter { it in after.buddies && it !in before.buddies }.forEach { add(buddyJoined(it)) }
-        (after.titles - before.titles.toSet()).take(MAX_TITLE_LINES).forEach { add(titleEarned(it)) }
-        add(CLOSING)
-    }
-
-    fun tripEnd(trip: TripResult, before: ProgressSummary, after: ProgressSummary, guardian: Int = 0): String =
-        tripEndLines(trip, before, after, guardian).joinToString(" ")
 }

@@ -57,12 +57,10 @@ class PlacesTest {
     }
 
     @Test
-    fun `등급이 오르면 주차 후 안내한다`() {
+    fun `세 번째 방문한 날 등급이 오른다`() {
         val before = summarize((0L..1L).map { trip(day.plusDays(it), Region.ULSAN) }, day.plusDays(2))
         val after = summarize((0L..2L).map { trip(day.plusDays(it), Region.ULSAN) }, day.plusDays(2))
-        val lines = Announcements.tripEndLines(TripResult(5.0, 10.0, 10, 0, 100, emptyList()), before, after, guardian = 1)
-        assertTrue(Announcements.gradeUp(Region.ULSAN, 1) in lines)
-        assertTrue(Announcements.GUARDIAN in lines)
-        assertEquals(Announcements.CLOSING, lines.last())
+        assertEquals(0, before.regulars.single { it.region == Region.ULSAN }.grade)
+        assertEquals(1, after.regulars.single { it.region == Region.ULSAN }.grade)
     }
 }

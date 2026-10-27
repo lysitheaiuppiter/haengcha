@@ -112,22 +112,4 @@ class InspectionTest {
         assertEquals(1, summary.mapaeCount)
         assertEquals(1, summary.inspectionsToday)
     }
-
-    @Test
-    fun `주차 후 안내는 출두·레벨업·테마 해금·마무리를 한 번에 말한다`() {
-        val day = LocalDate.of(2026, 10, 27)
-        fun progress(xp: Int) = summarize(listOf(TripRecord(0, 0, day, 10.0, 20.0, xp, 0, 0, 0, 0)), day)
-        val trip = TripResult(5.0, 10.0, 10, 0, 130, emptyList(), InspectionResult(InspectionOutcome.PASSED, 600.0, 0))
-        // 50XP(Lv.0) → 180XP(Lv.1): 인력거가 열린다
-        assertEquals(
-            "${Announcements.MAPAE} Lv.1 달성! 인력거 테마가 열렸습니다. ${Announcements.CLOSING}",
-            Announcements.tripEnd(trip, progress(50), progress(180)),
-        )
-        // 900XP(Lv.3) → 1030XP(Lv.4): 가마가 열린다
-        assertEquals(
-            "${Announcements.MAPAE} Lv.4 달성! 가마 테마가 열렸습니다. ${Announcements.CLOSING}",
-            Announcements.tripEnd(trip, progress(900), progress(1030)),
-        )
-        assertEquals(Announcements.CLOSING, Announcements.tripEnd(trip.copy(inspection = null), progress(50), progress(50)))
-    }
 }

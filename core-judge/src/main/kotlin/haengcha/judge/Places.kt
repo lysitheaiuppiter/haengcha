@@ -50,7 +50,8 @@ enum class Region(
     GANGNEUNG("강릉", "커피", GeoPoint(37.7519, 128.8760), 12.0, TOWN_GRADES, "☕"),
     JEJU("제주", "돌하르방", GeoPoint(33.4996, 126.5312), 15.0, TOWN_GRADES, "🗿"),
     YEOSU("여수", "밤바다", GeoPoint(34.7604, 127.6622), 12.0, TOWN_GRADES, "🌃"),
-    ANDONG("안동", "하회탈", GeoPoint(36.5684, 128.7294), 12.0, TOWN_GRADES, "🎭");
+    ANDONG("안동", "하회탈", GeoPoint(36.5684, 128.7294), 12.0, TOWN_GRADES, "🎭"),
+    CHEONGJU("청주", "직지", GeoPoint(36.6424, 127.4890), 12.0, TOWN_GRADES, "📖");
 
     operator fun contains(p: GeoPoint) = center.distanceKm(p) <= radiusKm
 

@@ -69,7 +69,6 @@ import haengcha.judge.InspectionRule
 import haengcha.judge.RestRule
 import haengcha.judge.Weather
 import haengcha.judge.WeatherRule
-import haengcha.judge.journey
 import haengcha.judge.JoseonTheme
 import haengcha.judge.ProgressSummary
 import java.util.Locale
@@ -283,12 +282,17 @@ internal fun ColumnScope.ProfileContent(state: DriveUiState, actions: ScreenActi
 
 /**
  * 정차 후 축하 연출(테마 해금, 지역 첫 방문, 단골 등급, 마패, 아이 지킴이, 동반자 합류).
- * 주행 중에는 보이지 않고 차를 세운 뒤 한 장씩 보여 준다. 뒤에서 빛줄기가 천천히 돈다.
+ * 주행 중에는 보이지 않고 차를 세운 뒤 한 장씩 보여 준다. 그 장의 안내 음성이 끝나면 잠깐 뒤 저절로 넘어가고,
+ * 확인을 누르면 바로 넘어간다(엔진이 넘긴다). 뒤에서 빛줄기가 천천히 돈다.
  */
 @Composable
 internal fun CelebrationOverlay(c: Celebration, onDone: () -> Unit) {
     BackHandler(onBack = onDone)
     val (title, subtitle) = when (c) {
+        is Celebration.LevelUp -> "Lv.${c.level} 달성" to (
+            JoseonTheme.entries.firstOrNull { it.unlockLevel > c.level }?.let { "안전 운전 경험치가 쌓였습니다 · ${it.label} 테마까지 Lv.${it.unlockLevel}" }
+                ?: "안전 운전 경험치가 쌓였습니다"
+            )
         is Celebration.ThemeUnlocked -> "${c.theme.label} 테마가 열렸습니다" to "Lv.${c.theme.unlockLevel} 달성 · 정차 화면의 탈것이 바뀌었습니다"
         is Celebration.RegionJoined -> c.status.region.let { r ->
             if (r.graded) "${r.label} ${r.theme} 테마가 켜졌습니다" to "${c.status.gradeLabel} 단골이 되었습니다"
@@ -312,8 +316,11 @@ internal fun CelebrationOverlay(c: Celebration, onDone: () -> Unit) {
         )
         is Celebration.WeatherCalm -> "${c.weather.label} 차분 운전" to "와이퍼를 켜고 급가속·급감속 없이 달리셨습니다 · +${WeatherRule().bonusXp}XP"
         Celebration.Rested -> "역참에서 쉬어 가셨습니다" to "말을 갈아타고 다시 길을 나섭니다 · +${RestRule().bonusXp}XP"
-        is Celebration.StationReached -> "옛길 원정 · ${c.station.label}" to "${c.station.kind}에 스탬프를 찍었습니다" +
-            (journey(c.station.km.toDouble()).next?.let { " · 다음은 ${it.label}" } ?: " · 한 바퀴를 마쳤습니다")
+        is Celebration.StationReached -> c.station.let { s ->
+            val next = s.next
+            if (next == null) "${s.road.label} 완주 · ${s.label}" to "${s.label}에 닿았습니다 · 다음 길은 ${s.road.next.label}입니다"
+            else "${s.road.label} · ${s.label}" to "${s.kind}에 스탬프를 찍었습니다 · 다음은 ${next.label}"
+        }
         is Celebration.Stamp -> "${c.landmark.label} 도착" to "${c.landmark.region.label} 명소 스탬프를 찍었습니다 · 첫 도착 +${ArrivalRule().bonusXp}XP"
         is Celebration.QuestDone -> "대장간 퀘스트 완료" to "${c.quest.label} 정비를 마쳤습니다 · 개근 보호권 1장"
         Celebration.ShieldUsed -> "개근 보호권 사용" to "끊길 뻔한 안전주행 개근 기록을 이었습니다"
@@ -365,6 +372,7 @@ internal fun CelebrationOverlay(c: Celebration, onDone: () -> Unit) {
 @Composable
 private fun CelebrationIcon(c: Celebration, modifier: Modifier) {
     when (c) {
+        is Celebration.LevelUp -> CelebrationEmoji("⭐", modifier)
         is Celebration.ThemeUnlocked -> assetBitmap("icons/icon_${c.theme.name.lowercase()}.webp")?.let { Image(it, c.theme.label, modifier) }
         is Celebration.RegionJoined -> Box(modifier, contentAlignment = Alignment.Center) { RegionEmblem(c.status.region, 200.dp) }
         is Celebration.GradeUp -> Box(modifier, contentAlignment = Alignment.Center) { RegionEmblem(c.status.region, 200.dp) }
@@ -375,7 +383,7 @@ private fun CelebrationIcon(c: Celebration, modifier: Modifier) {
         is Celebration.Eco -> CelebrationEmoji("🌾", modifier)
         is Celebration.WeatherCalm -> CelebrationEmoji(if (c.weather == Weather.SNOW) "❄️" else "🌧️", modifier)
         Celebration.Rested -> CelebrationEmoji("🐎", modifier)
-        is Celebration.StationReached -> CelebrationEmoji("📜", modifier)
+        is Celebration.StationReached -> CelebrationEmoji(if (c.station.next == null) "🏆" else "📜", modifier)
         is Celebration.Stamp -> CelebrationEmoji("🏮", modifier)
         is Celebration.QuestDone -> CelebrationEmoji("⚒️", modifier)
         Celebration.ShieldUsed -> CelebrationEmoji("🛡️", modifier)

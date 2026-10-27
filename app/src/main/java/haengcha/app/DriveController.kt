@@ -7,6 +7,7 @@ import android.util.Log
 import haengcha.drive.Clock
 import haengcha.drive.DriveEngine
 import haengcha.drive.DriveUiState
+import haengcha.drive.Voice
 import haengcha.judge.Buddy
 import haengcha.judge.GeoPoint
 import haengcha.judge.InspectionRule
@@ -33,7 +34,7 @@ class DriveController(
     private val pleos: PleosVehicleSignals,
     private val navi: PleosNavi,
     private val location: LocationSource,
-    say: (List<String>) -> Unit,
+    voice: Voice,
 ) {
     private val handler = Handler(Looper.getMainLooper())
 
@@ -47,7 +48,7 @@ class DriveController(
             override fun elapsedNanos() = SystemClock.elapsedRealtimeNanos()
         },
         scheduler = { delayMs, action -> handler.postDelayed(action, delayMs) },
-        say = say,
+        voice = voice,
         searchRestArea = navi::searchRestArea,
         log = { Log.i(TAG, it) },
     )

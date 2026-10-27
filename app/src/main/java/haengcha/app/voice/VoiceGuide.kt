@@ -12,6 +12,7 @@ import android.os.SystemClock
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
+import haengcha.drive.Voice
 import java.io.File
 import java.util.Locale
 
@@ -24,9 +25,10 @@ import java.util.Locale
  * - 재생 직전에 GAIN_TRANSIENT_MAY_DUCK으로 포커스를 받고 끝나면 반납한다. 거절되면 그 안내는 버린다.
  * - LOSS·LOSS_TRANSIENT(음성 비서 호출 등)면 바로 멈추고 대기 중인 안내까지 버린다. CAN_DUCK이면 소리를 줄인다.
  * - 내비게이션 음성이 나오는 중이면 끝날 때까지 기다린다(최대 10초). 길 안내보다 앞서지 않기 위해서다.
- * 안내는 들어온 순서대로 하나씩 재생한다. 모든 처리는 메인 스레드에서 한다.
+ * 안내는 들어온 순서대로 하나씩 재생하고, 끝나거나 버리면 요청할 때 받은 onDone을 부른다(축하 연출을 넘기는 시점).
+ * 모든 처리는 메인 스레드에서 한다.
  */
-class VoiceGuide(private val context: Context) {
+class VoiceGuide(private val context: Context) : Voice {
 
     private enum class TtsState { INIT, READY, UNAVAILABLE }
 
@@ -47,8 +49,8 @@ class VoiceGuide(private val context: Context) {
 
     private var tts: TextToSpeech? = null
     private var ttsState = TtsState.INIT
-    private val waiting = ArrayDeque<List<String>>()
-    private val synthesizing = mutableMapOf<String, File>()
+    private val waiting = ArrayDeque<Pair<List<String>, () -> Unit>>()
+    private val synthesizing = mutableMapOf<String, Pair<File, () -> Unit>>()
     private val queue = ArrayDeque<Utterance>()
     private var playing: Utterance? = null
     private var players: List<MediaPlayer> = emptyList()
@@ -62,16 +64,25 @@ class VoiceGuide(private val context: Context) {
     }
 
     /** [lines]를 한 번에 이어 말한다. */
-    fun say(lines: List<String>) {
+    override fun say(lines: List<String>, onDone: () -> Unit) {
         Log.i(TAG, "안내 요청: ${lines.joinToString(" ")}")
         val clips = lines.map { recorded[it] }
         when {
-            clips.all { it != null } -> enqueueRecorded(clips.filterNotNull())
-            ttsState == TtsState.READY -> synthesize(lines.joinToString(" "))
-            ttsState == TtsState.INIT -> if (waiting.size < MAX_WAITING) waiting += lines
+            clips.all { it != null } -> enqueueRecorded(clips.filterNotNull(), onDone)
+            ttsState == TtsState.READY -> synthesize(lines.joinToString(" "), onDone)
+            ttsState == TtsState.INIT && waiting.size < MAX_WAITING -> waiting += lines to onDone
+            ttsState == TtsState.INIT -> handler.post(onDone)
             // TTS를 못 쓰면 녹음이 있는 문장만 말한다
-            else -> clips.filterNotNull().takeIf { it.isNotEmpty() }?.let(::enqueueRecorded)
+            else -> clips.filterNotNull().takeIf { it.isNotEmpty() }?.let { enqueueRecorded(it, onDone) } ?: handler.post(onDone)
         }
+    }
+
+    /** 기다리는 안내를 버리고 지금 말하는 안내도 끊는다. */
+    override fun hush() {
+        while (waiting.isNotEmpty()) handler.post(waiting.removeFirst().second)
+        queue.forEach(::discard)
+        queue.clear()
+        finish()
     }
 
     private fun onInit(result: Int) {
@@ -85,18 +96,19 @@ class VoiceGuide(private val context: Context) {
             ttsState = TtsState.UNAVAILABLE
             Log.i(TAG, "TTS 못 씀(결과 $result, 언어 $language), 녹음만 재생. 보이는 엔진: ${engine.engines.map { it.name }}")
         }
-        while (waiting.isNotEmpty()) say(waiting.removeFirst())
+        while (waiting.isNotEmpty()) waiting.removeFirst().let { (lines, onDone) -> say(lines, onDone) }
     }
 
-    private fun enqueueRecorded(names: List<String>) = enqueue(Utterance.Recorded("voice-${seq++}", names))
+    private fun enqueueRecorded(names: List<String>, onDone: () -> Unit) = enqueue(Utterance.Recorded("voice-${seq++}", names, onDone))
 
-    private fun synthesize(text: String) {
+    private fun synthesize(text: String, onDone: () -> Unit) {
         val id = "voice-${seq++}"
         val raw = File(context.cacheDir, "$id-raw.wav")
-        synthesizing[id] = raw
+        synthesizing[id] = raw to onDone
         if (tts?.synthesizeToFile(text, Bundle(), raw, id) != TextToSpeech.SUCCESS) {
             synthesizing.remove(id)
             Log.w(TAG, "합성 요청 실패: $text")
+            handler.post(onDone)
         }
     }
 
@@ -109,23 +121,22 @@ class VoiceGuide(private val context: Context) {
 
         @Deprecated("Deprecated in Java")
         override fun onError(utteranceId: String) {
-            handler.post { synthesizing.remove(utteranceId)?.delete() }
+            handler.post { synthesizing.remove(utteranceId)?.let { (raw, onDone) -> raw.delete(); onDone() } }
             Log.w(TAG, "합성 실패 $utteranceId")
         }
     }
 
     private fun onSynthesized(id: String) {
-        val raw = synthesizing.remove(id) ?: return
+        val (raw, onDone) = synthesizing.remove(id) ?: return
         val padded = runCatching { Wav.withLeadingSilence(raw.readBytes(), PREROLL_MS) }.getOrNull()
         raw.delete()
         if (padded == null) {
             Log.w(TAG, "합성 결과가 PCM WAV가 아니라 재생하지 않음")
+            onDone()
             return
         }
-        enqueue(padded, id)
+        enqueue(Utterance.Synthesized(id, File(context.cacheDir, "$id.wav").apply { writeBytes(padded) }, onDone))
     }
-
-    private fun enqueue(wav: ByteArray, id: String) = enqueue(Utterance.Synthesized(id, File(context.cacheDir, "$id.wav").apply { writeBytes(wav) }))
 
     private fun enqueue(u: Utterance) {
         queue += u
@@ -135,9 +146,10 @@ class VoiceGuide(private val context: Context) {
     /** 재생할 안내 하나: 녹음 문장들(앞에 묵음 녹음) 또는 묵음을 붙여 합성한 WAV 파일. */
     private sealed interface Utterance {
         val id: String
+        val onDone: () -> Unit
 
-        data class Recorded(override val id: String, val names: List<String>) : Utterance
-        data class Synthesized(override val id: String, val file: File) : Utterance
+        data class Recorded(override val id: String, val names: List<String>, override val onDone: () -> Unit) : Utterance
+        data class Synthesized(override val id: String, val file: File, override val onDone: () -> Unit) : Utterance
     }
 
     /** 안내 하나를 이어 재생할 플레이어들. 준비하지 못하면 예외. */
@@ -207,8 +219,10 @@ class VoiceGuide(private val context: Context) {
         }
     }
 
+    /** 끝났거나 버린 안내를 치운다. 요청한 쪽에는 메인 스레드 다음 차례에 알린다. */
     private fun discard(u: Utterance) {
         if (u is Utterance.Synthesized) u.file.delete()
+        handler.post(u.onDone)
     }
 
     private val watchdog = Runnable {

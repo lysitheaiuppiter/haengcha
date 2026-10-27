@@ -37,7 +37,6 @@ import haengcha.drive.DriveUiState
 import haengcha.drive.LiveView
 import haengcha.judge.LiveTrip
 import haengcha.judge.SegmentMark
-import haengcha.judge.Station
 import haengcha.judge.Weather
 import java.util.Locale
 
@@ -186,15 +185,15 @@ private fun SegmentPips(marks: List<SegmentMark>) {
 private fun JourneyStrip(live: LiveView, themeKey: String, modifier: Modifier) {
     val j = live.journey
     val next = j.next
-    val span = ((next?.km ?: Station.TOTAL_KM) - j.reached.km).toDouble()
-    val f = ((j.lapKm - j.reached.km) / span).toFloat().coerceIn(0f, 1f)
+    val span = (next.km - j.reached.km).toDouble()
+    val f = ((j.roadKm - j.reached.km) / span).toFloat().coerceIn(0f, 1f)
     Row(
         modifier.glass().padding(horizontal = 24.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         Column(Modifier.width(150.dp)) {
-            Text("옛길 원정", fontSize = 18.sp, color = Muted)
+            Text("옛길 · ${j.road.label}", fontSize = 18.sp, color = Muted)
             Text(j.reached.label, fontSize = 24.sp, fontWeight = FontWeight.Bold)
         }
         BoxWithConstraints(Modifier.weight(1f).height(64.dp)) {
@@ -211,7 +210,7 @@ private fun JourneyStrip(live: LiveView, themeKey: String, modifier: Modifier) {
             }
         }
         Column(Modifier.width(210.dp), horizontalAlignment = Alignment.End) {
-            Text(next?.let { "${it.label} ${it.kind}" } ?: "한 바퀴 완주", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text("${next.label} ${next.kind}", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             Text(String.format(Locale.ROOT, "%.1fkm 남음", j.kmToNext), fontSize = 22.sp, color = Gold, fontWeight = FontWeight.SemiBold)
         }
     }

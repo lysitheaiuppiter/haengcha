@@ -1,5 +1,6 @@
 package haengcha.drive
 
+import haengcha.judge.Announcements
 import haengcha.judge.Buddy
 import haengcha.judge.CompletedTrip
 import haengcha.judge.Destination
@@ -139,6 +140,7 @@ internal class LiveBoard {
     private var journeyKm: Double? = null
     private var banner: String? = null
     private var bannerUntil = 0L
+    private var bannerRank = 0
 
     fun begin() {
         xp = -1
@@ -152,14 +154,17 @@ internal class LiveBoard {
         val j = journey(baseKm + maxOf(odoKm ?: 0.0, trip.distanceKm))
         if (xp >= 0) {
             val station = stationsReached(journeyKm ?: baseKm, j.totalKm).lastOrNull()
-            val text = when {
-                station != null -> "📜 옛길 원정 · ${station.label} ${station.kind}에 이르렀습니다"
-                trip.safeRun > run && trip.safeRun % RUN_MILESTONE == 0 -> "무사고 ${trip.safeRun}분 행진!"
-                trip.xp > xp -> "+${trip.xp - xp}XP · 1분 안전 구간"
-                else -> null
+            // 뒤 알림이 앞 알림보다 낮으면 앞 알림이 다 보일 때까지 기다리지 않고 버린다(옛길 > 무사고 > 구간 경험치)
+            val (text, rank) = when {
+                station != null && station.next == null -> "🏆 ${station.road.label} 완주 · ${station.label}에 닿았습니다" to 3
+                station != null -> "📜 옛길 원정 · ${station.label} ${station.kind}에 이르렀습니다" to 3
+                trip.safeRun > run && trip.safeRun % RUN_MILESTONE == 0 -> "무사고 ${trip.safeRun}분 행진!" to 2
+                trip.xp > xp -> "+${trip.xp - xp}XP · 1분 안전 구간" to 1
+                else -> null to 0
             }
-            if (text != null) {
+            if (text != null && (nowMs >= bannerUntil || rank >= bannerRank)) {
                 banner = text
+                bannerRank = rank
                 bannerUntil = nowMs + BANNER_MS
             }
         }
@@ -209,7 +214,9 @@ internal fun celebrationsFor(
     record.stamp?.let { add(Celebration.Stamp(it)) }
     stationsReached(before.journey.totalKm, after.journey.totalKm).forEach { add(Celebration.StationReached(it)) }
     if (after.shieldsUsed > before.shieldsUsed) add(Celebration.ShieldUsed)
-    (after.themes - before.themes.toSet()).forEach { add(Celebration.ThemeUnlocked(it)) }
+    val themes = after.themes - before.themes.toSet()
+    if (after.level > before.level && themes.isEmpty()) add(Celebration.LevelUp(after.level))
+    themes.forEach { add(Celebration.ThemeUnlocked(it)) }
     after.regulars.forEach { now ->
         val was = before.regulars.firstOrNull { it.region == now.region }
         if (was == null) add(Celebration.RegionJoined(now)) else if (now.grade > was.grade) add(Celebration.GradeUp(now))
@@ -223,3 +230,23 @@ internal fun newBuddiesAndTitles(before: ProgressSummary, after: ProgressSummary
         (after.titles - before.titles.toSet()).take(MAX_TITLE_CELEBRATIONS).map(Celebration::TitleEarned)
 
 private const val MAX_TITLE_CELEBRATIONS = 3
+
+/** 축하 연출 한 장에서 말할 문장. 문장이 없는 장(역참 휴식)은 보여 주기만 한다. */
+internal fun Celebration.lines(): List<String> = when (this) {
+    is Celebration.LevelUp -> listOf(Announcements.levelUp(level))
+    is Celebration.ThemeUnlocked -> listOf(Announcements.levelUp(theme.unlockLevel), Announcements.themeUnlocked(theme))
+    is Celebration.RegionJoined -> listOf(Announcements.regionCollected(status.region))
+    is Celebration.GradeUp -> listOf(Announcements.gradeUp(status.region, status.grade))
+    Celebration.Mapae -> listOf(Announcements.MAPAE)
+    Celebration.Guardian -> listOf(Announcements.GUARDIAN)
+    is Celebration.BuddyJoined -> listOf(Announcements.buddyJoined(buddy))
+    is Celebration.TitleEarned -> listOf(Announcements.titleEarned(title))
+    is Celebration.Eco -> listOf(Announcements.ECO)
+    is Celebration.WeatherCalm -> listOf(if (weather == Weather.SNOW) Announcements.SNOW_CALM else Announcements.RAIN_CALM)
+    Celebration.Rested -> emptyList()
+    is Celebration.StationReached ->
+        listOf(Announcements.stationReached(station)) + listOfNotNull(Announcements.roadDone(station.road).takeIf { station.next == null })
+    is Celebration.Stamp -> listOf(Announcements.stamped(landmark))
+    is Celebration.QuestDone -> listOf(Announcements.QUEST_DONE)
+    Celebration.ShieldUsed -> listOf(Announcements.SHIELD_USED)
+}

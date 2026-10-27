@@ -75,6 +75,8 @@ data class LiveView(val trip: LiveTrip, val journey: JourneyStatus, val banner: 
 
 /** 정차 후 보여 줄 축하 연출. 해금 연출은 차를 세운 뒤에만 재생한다(기획서 4.2). */
 sealed interface Celebration {
+    /** 테마가 함께 열리지 않은 레벨업(열리면 [ThemeUnlocked]가 레벨까지 알린다). */
+    data class LevelUp(val level: Int) : Celebration
     data class ThemeUnlocked(val theme: JoseonTheme) : Celebration
     data class RegionJoined(val status: RegularStatus) : Celebration
     data class GradeUp(val status: RegularStatus) : Celebration

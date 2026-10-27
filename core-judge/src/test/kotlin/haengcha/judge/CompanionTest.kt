@@ -20,8 +20,8 @@ class CompanionTest {
         assertFalse(before.companion.joined)
         val after = summarize(records + trip(today), today)
         assertTrue(after.companion.joined)
-        val lines = Announcements.tripEndLines(TripResult(5.0, 10.0, 5, 0, 50, emptyList()), before, after)
-        assertTrue(Announcements.COMPANION_JOINED in lines)
+        assertTrue(Buddy.TURTLE in after.buddies)
+        assertEquals(Announcements.COMPANION_JOINED, Announcements.buddyJoined(Buddy.TURTLE))
         assertEquals(10, after.tripsToday)
         assertEquals(50.0, after.kmToday, 1e-9)
     }

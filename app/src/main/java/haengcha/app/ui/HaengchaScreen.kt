@@ -165,7 +165,11 @@ private fun ParkedScreen(state: DriveUiState, actions: ScreenActions) {
                 if (state.charging) "충전하는 동안 오늘 모은 도감을 정리해 볼까요?" else null,
                 onClose = { panel = null },
             ) { DogamContent(p, state.title, actions.chooseTitle.takeUnless { state.inTrip }) }
-            PanelKind.JOURNEY -> PanelOverlay("옛길 원정", "영남대로 · 한양에서 동래까지", onClose = { panel = null }) { JourneyContent(state) }
+            PanelKind.JOURNEY -> PanelOverlay(
+                "옛길 원정",
+                p.journey.road.let { "${it.label} · ${it.stations.first().label}에서 ${it.destination.label}까지" },
+                onClose = { panel = null },
+            ) { JourneyContent(state) }
             PanelKind.COMPANION -> PanelOverlay("동반자", null, onClose = { panel = null }) { CompanionContent(state, actions.chooseBuddy) }
             PanelKind.SHOP -> PanelOverlay("콜라보 동반자 상점", "시연용", onClose = { panel = null }) { ShopContent(state, actions.buy) }
             PanelKind.PROFILE -> PanelOverlay("운전자", null, onClose = { panel = null }) { ProfileContent(state, actions) }

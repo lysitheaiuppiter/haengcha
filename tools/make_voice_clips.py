@@ -37,6 +37,7 @@ TOWNS = [
     ("gyeongju", "경주", "왕관", "천년 고도 행차입니다."), ("jeonju", "전주", "비빔밥", "비빔밥의 고장입니다."),
     ("gangneung", "강릉", "커피", "커피 향이 반깁니다."), ("jeju", "제주", "돌하르방", "돌하르방이 반깁니다."),
     ("yeosu", "여수", "밤바다", "밤바다가 반깁니다."), ("andong", "안동", "하회탈", "하회탈이 웃으며 반깁니다."),
+    ("cheongju", "청주", "직지", "금속활자 직지의 고장입니다."),
 ]
 TOWN_GRADES = ["나그네", "길손", "단골손님", "이웃사촌", "명예 주민"]
 # 칭호(파일 이름, 이름) — core-judge Title과 같아야 한다
@@ -45,9 +46,10 @@ TITLES = [("first_trip", "첫 행차"), ("trips_30", "길 위의 선비"), ("li_
           ("guardian_5", "아이 지킴이 대장"), ("night_5", "달빛 행차꾼"), ("rain_5", "우중 신선"), ("eco_10", "검약 대감"),
           ("rice_10", "곳간 부자"), ("rest_3", "역참 단골"), ("smith_3", "대장간 단골"), ("stamp_5", "명소 수집가"),
           ("town_all", "명소 완주"), ("regions_7", "팔도 유람객"), ("regular_top", "고을의 자랑"),
-          ("joryeong", "새재 넘은 나그네"), ("yeongnam", "영남대로 완주자"), ("friday_5", "금요일의 해방자"),
+          ("joryeong", "새재 넘은 나그네"), ("yeongnam", "영남대로 완주자"), ("samnam", "삼남대로 완주자"),
+          ("friday_5", "금요일의 해방자"),
           ("dawn_3", "새벽 출근 장인"), ("guardian_50", "어린이의 수호신"), ("rice_100", "만석꾼"),
-          ("streak_100", "백일 개근 영의정"), ("li_10000", "만 리 행차꾼"), ("yeongnam_3", "영남대로 삼세번"),
+          ("streak_100", "백일 개근 영의정"), ("li_10000", "만 리 행차꾼"), ("roads_all", "삼대로 대장정"),
           ("regions_all", "방방곡곡 대장정"), ("stamps_all", "명소 도감 완성"), ("mapae_30", "어사또"),
           ("top_3", "삼도 명예 주민"), ("rainy_night", "비 오는 밤의 나그네"), ("new_year", "제야의 행차")]
 # 주행 보상 동반자 합류 문장(거북이는 companion) — core-judge Buddy와 같아야 한다
@@ -60,7 +62,8 @@ BUDDIES = [("rooster", "부지런한 닭이 행차에 합류했습니다."), ("o
 # 읽는 방법
 SPOKEN = {"3등급 한우": "삼등급 한우", "2등급 한우": "이등급 한우", "1등급 한우": "일등급 한우",
           "1+ 한우": "원플러스 한우", "투뿔(1++) 한우": "투뿔 한우",
-          "N서울타워": "엔 서울타워", "김광석다시그리기길": "김광석 다시 그리기 길", "전주한옥마을": "전주 한옥마을"}
+          "N서울타워": "엔 서울타워", "김광석다시그리기길": "김광석 다시 그리기 길", "전주한옥마을": "전주 한옥마을",
+          "청주고인쇄박물관": "청주 고인쇄 박물관"}
 
 
 def josa(word, with_final, without_final):
@@ -72,10 +75,20 @@ def josa(word, with_final, without_final):
 
 # 대장간 퀘스트(파일 이름, 제목) — core-judge Quest와 같아야 한다
 QUESTS = [("tire", "말편자를 갈 때입니다"), ("oil", "굴대에 기름칠할 때입니다")]
-# 옛길 원정 지점(한양 출발 제외) — core-judge Station과 같아야 한다
+# 옛길 원정 지점(길마다 출발점 제외) — core-judge Station과 같아야 한다
 STATIONS = [("pangyo", "판교"), ("yongin", "용인"), ("yangji", "양지"), ("juksan", "죽산"), ("chungju", "충주"),
             ("joryeong", "문경새재 조령관"), ("yugok", "유곡"), ("nakdong", "낙동나루"), ("seonsan", "선산"),
-            ("daegu", "대구 경상감영"), ("cheongdo", "청도"), ("miryang", "밀양 영남루"), ("yangsan", "양산"), ("dongnae", "동래")]
+            ("daegu", "대구 경상감영"), ("cheongdo", "청도"), ("miryang", "밀양 영남루"), ("yangsan", "양산"), ("dongnae", "동래"),
+            # 삼남대로
+            ("namtaeryeong", "남태령"), ("suwon", "수원 화성행궁"), ("jinwi", "진위"), ("cheonan", "천안삼거리"),
+            ("gongju", "공주 금강나루"), ("eunjin", "은진"), ("samnye", "삼례"), ("jeonju", "전주 전라감영"), ("jeongeup", "정읍"),
+            ("galjae", "장성 갈재"), ("naju", "나주 금성관"), ("yeongam", "영암"), ("haenam", "해남"),
+            # 관동대로
+            ("mangu", "망우리 고개"), ("pyeonggu", "평구역"), ("yanggeun", "양근나루"), ("wonju", "원주 강원감영"), ("anheung", "안흥"),
+            ("jinbu", "진부"), ("daegwallyeong", "대관령"), ("gyeongpodae", "강릉 경포대"), ("jukseoru", "삼척 죽서루"),
+            ("uljin", "울진"), ("pyeonghae", "평해 월송정")]
+# 옛길 한 길을 마쳤을 때(파일 이름, 길, 다음 길) — core-judge Road와 같아야 한다
+ROADS = [("yeongnam", "영남대로", "삼남대로"), ("samnam", "삼남대로", "관동대로"), ("gwandong", "관동대로", "영남대로")]
 # 명소 — core-judge Landmark와 같아야 한다
 LANDMARKS = [("daewangam", "대왕암공원"), ("jangsaengpo", "장생포 고래문화마을"), ("taehwagang", "태화강 국가정원"),
              ("ganjeolgot", "간절곶"), ("hoengseong_lake", "횡성호수길"), ("pungsuwon", "풍수원성당"),
@@ -85,7 +98,8 @@ LANDMARKS = [("daewangam", "대왕암공원"), ("jangsaengpo", "장생포 고래
              ("mudeungsan", "무등산"), ("yangnim", "양림동 역사문화마을"), ("hanbit_tower", "한빛탑"), ("sungsimdang", "성심당"),
              ("bulguksa", "불국사"), ("cheomseongdae", "첨성대"), ("jeonju_hanok", "전주한옥마을"), ("gyeonggijeon", "경기전"),
              ("gyeongpo", "경포대"), ("anmok", "안목해변"), ("seongsan", "성산일출봉"), ("hallasan", "한라산"),
-             ("odongdo", "오동도"), ("yi_sunsin_square", "이순신광장"), ("hahoe", "하회마을"), ("wolyeonggyo", "월영교")]
+             ("odongdo", "오동도"), ("yi_sunsin_square", "이순신광장"), ("hahoe", "하회마을"), ("wolyeonggyo", "월영교"),
+             ("goinswae", "청주고인쇄박물관"), ("sangdang", "상당산성"), ("suamgol", "수암골")]
 
 # (파일 이름, 앱이 말하려는 문장, 실제로 읽힐 문장)
 PHRASES = [
@@ -117,6 +131,7 @@ PHRASES = [
     ("quest_done", "정비를 마쳤습니다. 개근 보호권을 드립니다.", "정비를 마쳤습니다. 개근 보호권을 드립니다."),
     *[(f"quest_{key}", f"대장간 퀘스트입니다. {title}.", f"대장간 퀘스트입니다. {title}.") for key, title in QUESTS],
     *[(f"station_{key}", f"옛길 원정, {label}에 이르렀습니다.", f"옛길 원정, {label}에 이르렀습니다.") for key, label in STATIONS],
+    *[(f"road_{key}", f"{label} 완주! 다음 길은 {nxt}입니다.", f"{label} 완주! 다음 길은 {nxt}입니다.") for key, label, nxt in ROADS],
     *[(f"stamp_{key}", f"{label} 도착! 스탬프를 찍었습니다.", f"{SPOKEN.get(label, label)} 도착! 스탬프를 찍었습니다.")
       for key, label in LANDMARKS],
     # 지역 도감·칭호·동반자

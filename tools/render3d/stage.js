@@ -1,6 +1,6 @@
 /*
  * 행차 무대: 지금 테마 탈것을 올린 단상과 지역 풍경(궁궐 마당, 울산 밤바다와 고래, 횡성 들판과 한우).
- * 도감 지역 12곳의 장면은 towns.js에 있고(window.TOWNS), 여기 도우미(window.Stage)를 쓴다.
+ * 도감 지역 13곳의 장면은 towns.js에 있고(window.TOWNS), 여기 도우미(window.Stage)를 쓴다.
  * 한 코드로 두 가지를 그린다(tools/render3d/render.mjs가 헤드리스 크롬에서 부른다).
  *  - 정지 그림(window.renderLayer): 탈것 레이어(투명)와 배경 레이어, 도감 아이콘
  *  - 움직이는 배경(window.Anim): 고래가 뛰어오르고, 등대 불빛이 돌고, 반딧불·초롱·별이 일렁이는 루프 영상의 프레임.

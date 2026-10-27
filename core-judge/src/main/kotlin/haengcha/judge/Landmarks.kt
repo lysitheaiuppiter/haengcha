@@ -35,7 +35,11 @@ enum class Landmark(val label: String, val region: Region, val keywords: List<St
     ODONGDO("오동도", Region.YEOSU, listOf("오동도")),
     YI_SUNSIN_SQUARE("이순신광장", Region.YEOSU, listOf("이순신광장")),
     HAHOE("하회마을", Region.ANDONG, listOf("하회마을")),
-    WOLYEONGGYO("월영교", Region.ANDONG, listOf("월영교"));
+    WOLYEONGGYO("월영교", Region.ANDONG, listOf("월영교")),
+    // '직지'만으로는 김천 직지사와 헷갈려 박물관 이름으로 알아본다
+    GOINSWAE("청주고인쇄박물관", Region.CHEONGJU, listOf("고인쇄박물관", "흥덕사지")),
+    SANGDANG("상당산성", Region.CHEONGJU, listOf("상당산성")),
+    SUAMGOL("수암골", Region.CHEONGJU, listOf("수암골"));
 
     companion object {
         fun match(name: String?): Landmark? {
