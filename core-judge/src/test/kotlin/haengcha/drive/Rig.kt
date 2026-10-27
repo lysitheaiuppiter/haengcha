@@ -6,6 +6,7 @@ import haengcha.judge.JournalHeader
 import haengcha.judge.JournalState
 import haengcha.judge.Quest
 import haengcha.judge.SpeedSample
+import haengcha.judge.Title
 import haengcha.judge.TripJournal
 import haengcha.judge.TripRecord
 import java.time.ZoneId
@@ -84,6 +85,11 @@ class FakeSettings : DriveSettings {
     override fun buddy(profileId: String) = buddies[profileId]
     override fun setBuddy(profileId: String, buddy: Buddy) {
         buddies[profileId] = buddy
+    }
+    val titles = mutableMapOf<String, Title>()
+    override fun title(profileId: String) = titles[profileId]
+    override fun setTitle(profileId: String, title: Title) {
+        titles[profileId] = title
     }
     override var openQuests = emptyMap<Quest, Long>()
     override var restState: String? = null

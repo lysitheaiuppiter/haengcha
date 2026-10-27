@@ -17,6 +17,7 @@ import haengcha.judge.RestRule
 import haengcha.judge.SchoolZone
 import haengcha.judge.SchoolZonePass
 import haengcha.judge.SpeedSample
+import haengcha.judge.Title
 import haengcha.judge.TripJournal
 import haengcha.judge.TripRecord
 import haengcha.judge.TripTracker
@@ -67,6 +68,7 @@ class DriveEngine(
             summary(records), recent(records),
             profiles = settings.profiles, activeProfile = settings.activeProfile, owned = settings.owned,
             quests = quests.open, night = scene.night(clock.timeOfDay()), chosenBuddy = settings.buddy(settings.activeProfile),
+            chosenTitle = settings.title(settings.activeProfile),
         ),
     )
     val state: StateFlow<DriveUiState> = _state
@@ -137,7 +139,7 @@ class DriveEngine(
         _state.update {
             it.copy(
                 progress = summary(records), recentTrips = recent(records), activeProfile = id, celebrations = emptyList(),
-                chosenBuddy = settings.buddy(id),
+                chosenBuddy = settings.buddy(id), chosenTitle = settings.title(id),
             )
         }
         return true
@@ -159,6 +161,13 @@ class DriveEngine(
         if (buddy !in _state.value.progress.buddies) return
         settings.setBuddy(settings.activeProfile, buddy)
         _state.update { it.copy(chosenBuddy = buddy) }
+    }
+
+    /** 정차 화면에 달 대표 칭호를 고른다. 가진 칭호만 고를 수 있다. */
+    fun chooseTitle(title: Title) {
+        if (title !in _state.value.progress.titles) return
+        settings.setTitle(settings.activeProfile, title)
+        _state.update { it.copy(chosenTitle = title) }
     }
 
     fun dismissCelebration() {

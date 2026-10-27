@@ -290,6 +290,24 @@ class DriveEngineTest {
     }
 
     @Test
+    fun `가진 칭호 가운데 하나를 대표 칭호로 고른다`() {
+        val rig = Rig()
+        rig.engine.seedTour()
+        val titles = rig.state.progress.titles
+        assertEquals(titles.first(), rig.state.title) // 고르기 전에는 가장 어려운 칭호
+        val easy = titles.last()
+        rig.engine.chooseTitle(easy)
+        assertEquals(easy, rig.state.title)
+        assertEquals(easy, rig.settings.title(Profile.DEFAULT.id))
+        // 아직 없는 칭호는 고를 수 없다
+        rig.engine.chooseTitle(Title.STREAK_100)
+        assertEquals(easy, rig.state.title)
+        // 엔진을 다시 띄워도 고른 칭호가 남는다
+        rig.restart("boot-1")
+        assertEquals(easy, rig.state.title)
+    }
+
+    @Test
     fun `도감 지역에 들어가면 지역마다 다른 인사를 하고 장면은 바꾸지 않는다`() {
         val rig = Rig()
         rig.calmTrip(events = listOf(30.0 to { rig.engine.onLocation(GeoPoint(35.1631, 129.1636)) })) // 해운대

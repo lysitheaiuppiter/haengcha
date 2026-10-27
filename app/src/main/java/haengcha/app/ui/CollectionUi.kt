@@ -151,24 +151,34 @@ private fun RegionTile(r: Region, status: RegularStatus?, modifier: Modifier) {
     }
 }
 
-/** 칭호: 얻은 것부터, 아직 못 얻은 것은 조건을 보여 준다. */
+/**
+ * 칭호: 얻은 것부터, 아직 못 얻은 것은 조건을 보여 준다. 얻은 칭호를 누르면 정차 화면에 다는 대표 칭호([chosen])가 된다
+ * ([onChoose]가 null이면 고를 수 없음, 주행 중).
+ */
 @Composable
-internal fun ColumnScope.TitleSection(p: ProgressSummary) {
+internal fun ColumnScope.TitleSection(p: ProgressSummary, chosen: Title?, onChoose: ((Title) -> Unit)?) {
     Text(
-        "칭호 ${p.titles.size}/${Title.entries.size}" + (p.titles.firstOrNull()?.let { " · 대표 칭호 ${it.emoji} ${it.label}" } ?: ""),
+        "칭호 ${p.titles.size}/${Title.entries.size}" + (chosen?.let { " · 대표 칭호 ${it.emoji} ${it.label}" } ?: ""),
         fontSize = 20.sp,
         color = Muted,
         fontWeight = FontWeight.SemiBold,
     )
+    if (p.titles.size > 1 && onChoose != null) Text("얻은 칭호를 누르면 대표 칭호로 답니다", fontSize = 17.sp, color = Muted)
     // 못 얻은 것은 쉬운 것부터, 숨은 칭호는 맨 뒤에 이름과 조건을 감춘다
     val locked = Title.entries.filter { it !in p.titles }.sortedWith(compareBy({ it.hidden }, { it.tier }))
     TileGrid(p.titles + locked, minTile = 230.dp) { t, m ->
         val got = t in p.titles
         val masked = t.hidden && !got
-        Row(m.collectTile(rarity = t.rarity.takeIf { got }), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        val tile = m.clip(RoundedCornerShape(16.dp))
+            .then(if (got && onChoose != null) Modifier.clickable { onChoose(t) } else Modifier)
+            .collectTile(on = t == chosen, rarity = t.rarity.takeIf { got })
+        Row(tile, horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Emoji(if (masked) "❔" else t.emoji, 34, Modifier.alpha(if (got) 1f else 0.3f))
             Column {
-                RarityTag(if (masked) Rarity.RARE else t.rarity)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    RarityTag(if (masked) Rarity.RARE else t.rarity)
+                    if (t == chosen) Text("대표", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Gold)
+                }
                 Text(if (masked) "숨은 칭호" else t.label, fontSize = 19.sp, fontWeight = FontWeight.Bold, color = if (got) Cream else Muted)
                 Text(if (masked) "어떤 주행에서 열릴까요?" else t.desc, fontSize = 15.sp, color = if (got) Gold else Muted)
             }

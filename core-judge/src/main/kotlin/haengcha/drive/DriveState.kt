@@ -58,7 +58,13 @@ data class DriveUiState(
     val live: LiveView? = null,
     /** 운전자가 고른 동반자. 아직 합류하지 않았으면(이달 거북이가 떠난 경우 등) [buddy]가 대신 고른다. */
     val chosenBuddy: Buddy? = null,
+    /** 운전자가 고른 대표 칭호. 그 칭호가 없으면(운전자를 바꾼 경우 등) [title]이 가장 어려운 칭호를 단다. */
+    val chosenTitle: Title? = null,
 ) {
+    /** 정차 화면에 다는 대표 칭호. */
+    val title: Title?
+        get() = chosenTitle?.takeIf { it in progress.titles } ?: progress.titles.firstOrNull()
+
     /** 정차 화면에 함께 있는 동반자. 고른 동반자가 없으면 가장 늦게 열리는 동반자. */
     val buddy: Buddy?
         get() = chosenBuddy?.takeIf { it in progress.buddies } ?: Buddy.entries.lastOrNull { it in progress.buddies }

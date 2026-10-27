@@ -60,6 +60,7 @@ import haengcha.drive.DriveUiState
 import haengcha.app.R
 import haengcha.judge.Buddy
 import haengcha.judge.Rarity
+import haengcha.judge.Title
 import haengcha.judge.josa
 import haengcha.judge.GuardianRule
 import haengcha.judge.ArrivalRule
@@ -87,6 +88,7 @@ class ScreenActions(
     val addProfile: () -> Unit,
     val buy: (String) -> Unit,
     val chooseBuddy: (Buddy) -> Unit,
+    val chooseTitle: (Title) -> Unit = {},
     /** 화면 배치: 내비게이션 가운데, 행차 오른쪽. */
     val naviCenter: () -> Boolean = { true },
     val setNaviCenter: (Boolean) -> Unit = {},
@@ -156,7 +158,7 @@ private fun Modifier.tile() = this.clip(RoundedCornerShape(16.dp)).background(Co
 
 /** 도감. 충전 중에는 '쉬어가는 행차'로 열린다(기획서 부록 B). */
 @Composable
-internal fun ColumnScope.DogamContent(p: ProgressSummary) {
+internal fun ColumnScope.DogamContent(p: ProgressSummary, title: Title? = p.titles.firstOrNull(), onChooseTitle: ((Title) -> Unit)? = null) {
     SectionLabel("오늘")
     Text(
         String.format(Locale.ROOT, "주행 %d회 · %.1fkm · +%dXP · 안전주행 개근 %d일", p.tripsToday, p.kmToday, p.todayXp, p.streak),
@@ -182,7 +184,7 @@ internal fun ColumnScope.DogamContent(p: ProgressSummary) {
             else -> StatTile(R.drawable.companion_turtle, "동반자", "${p.buddies.size}/${Buddy.entries.size}", m)
         }
     }
-    TitleSection(p)
+    TitleSection(p, title, onChooseTitle)
     RegionSection(p)
 }
 

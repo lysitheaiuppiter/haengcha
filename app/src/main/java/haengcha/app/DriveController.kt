@@ -12,6 +12,7 @@ import haengcha.judge.GeoPoint
 import haengcha.judge.InspectionRule
 import haengcha.judge.Region
 import haengcha.judge.RestRule
+import haengcha.judge.Title
 import haengcha.vehicle.CarVehicleSignals
 import haengcha.vehicle.PleosNavi
 import haengcha.vehicle.PleosVehicleSignals
@@ -73,6 +74,8 @@ class DriveController(
     fun buy(itemId: String) = engine.buy(itemId)
 
     fun chooseBuddy(buddy: Buddy) = engine.chooseBuddy(buddy)
+
+    fun chooseTitle(title: Title) = engine.chooseTitle(title)
 
     fun dismissCelebration() = engine.dismissCelebration()
 

@@ -23,6 +23,7 @@ class MainActivity : ComponentActivity() {
             addProfile = app.drive::addProfile,
             buy = app.drive::buy,
             chooseBuddy = app.drive::chooseBuddy,
+            chooseTitle = app.drive::chooseTitle,
             naviCenter = { app.prefs.naviCenter },
             setNaviCenter = { on ->
                 app.prefs.naviCenter = on

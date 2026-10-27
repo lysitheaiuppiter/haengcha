@@ -5,6 +5,7 @@ import haengcha.drive.DriveSettings
 import haengcha.drive.Profile
 import haengcha.judge.Buddy
 import haengcha.judge.Quest
+import haengcha.judge.Title
 
 /**
  * 프로필 목록·현재 프로필과 콜라보 동반자 보유 목록을 앱 설정에 둔다.
@@ -46,6 +47,11 @@ class AppPrefs(context: Context) : DriveSettings {
 
     override fun setBuddy(profileId: String, buddy: Buddy) = sp.edit().putString(KEY_BUDDY + profileId, buddy.name).apply()
 
+    override fun title(profileId: String): Title? =
+        sp.getString(KEY_TITLE + profileId, null)?.let { runCatching { Title.valueOf(it) }.getOrNull() }
+
+    override fun setTitle(profileId: String, title: Title) = sp.edit().putString(KEY_TITLE + profileId, title.name).apply()
+
     /** 열려 있는 대장간 퀘스트와 연 시각(ms). */
     override var openQuests: Map<Quest, Long>
         get() = sp.getStringSet(KEY_QUESTS, emptySet()).orEmpty().mapNotNull { e ->
@@ -67,6 +73,7 @@ class AppPrefs(context: Context) : DriveSettings {
     companion object {
         private const val KEY_SHIELDS = "shields_"
         private const val KEY_BUDDY = "buddy_"
+        private const val KEY_TITLE = "title_"
         private const val KEY_QUESTS = "open_quests"
         private const val KEY_REST = "rest_state"
         private const val KEY_NAVI_CENTER = "navi_center"

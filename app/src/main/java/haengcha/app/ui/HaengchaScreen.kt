@@ -126,7 +126,7 @@ private fun ParkedScreen(state: DriveUiState, actions: ScreenActions) {
             ) {
                 // 한 칸(portrait)에서는 메뉴가 테마 표시와 겹치지 않게 맨 위 줄에 둔다
                 if (!wide) MenuChips(state, onOpen = { panel = it })
-                ThemeBadge(theme, p.titles.firstOrNull())
+                ThemeBadge(theme, state.title)
                 LevelCard(p)
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     SmallCard("오늘", "${p.todayXp}XP", "개근 ${p.streak}일" + if (p.shields > 0) " · 보호권 ${p.shields}" else "", Modifier.weight(1f))
@@ -164,7 +164,7 @@ private fun ParkedScreen(state: DriveUiState, actions: ScreenActions) {
                 if (state.charging) "쉬어가는 행차" else "도감",
                 if (state.charging) "충전하는 동안 오늘 모은 도감을 정리해 볼까요?" else null,
                 onClose = { panel = null },
-            ) { DogamContent(p) }
+            ) { DogamContent(p, state.title, actions.chooseTitle.takeUnless { state.inTrip }) }
             PanelKind.JOURNEY -> PanelOverlay("옛길 원정", "영남대로 · 한양에서 동래까지", onClose = { panel = null }) { JourneyContent(state) }
             PanelKind.COMPANION -> PanelOverlay("동반자", null, onClose = { panel = null }) { CompanionContent(state, actions.chooseBuddy) }
             PanelKind.SHOP -> PanelOverlay("콜라보 동반자 상점", "시연용", onClose = { panel = null }) { ShopContent(state, actions.buy) }
