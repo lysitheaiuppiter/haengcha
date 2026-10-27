@@ -17,3 +17,5 @@ build/
 /docs/submission/*.zip
 # 심사용 안내문 PDF(docs/submission/haengcha-demo-guide.md에서 만든다)
 /docs/submission/*.pdf
+# 시연 영상(tools 밖에서 녹화·편집, 크기가 커서 저장소에 넣지 않음)
+/docs/submission/*.mp4
