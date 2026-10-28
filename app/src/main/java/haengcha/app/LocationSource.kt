@@ -12,7 +12,7 @@ import haengcha.judge.GeoPoint
 
 /**
  * 차량 위치. 지역 테마와 어린이보호구역 판정에만 쓰고 좌표는 저장하지 않는다(기록에는 지역 이름만 남는다).
- * Pleos 위치 SDK가 준비 중이라 Android 표준 LocationManager를 쓴다(기획서 8장).
+ * Pleos FusedLocation SDK는 아직 붙이지 않아 Android 표준 LocationManager를 쓴다(기획서 8장).
  */
 class LocationSource(private val context: Context) {
 

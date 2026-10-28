@@ -1,15 +1,14 @@
-"""행차 음성 안내 문장을 Supertonic 3(소개 영상 나레이션과 같은 목소리)로 합성해 앱 assets에 넣는다.
+"""행차 안전 안내의 예비 녹음을 Supertonic 3(소개 영상 나레이션과 같은 목소리)로 합성해 앱 assets에 넣는다.
 
-Pleos 에뮬레이터의 음성 엔진은 TTS_SERVICE 필터에 DEFAULT 카테고리가 없어 Android 표준 TextToSpeech API로 보이지 않는다.
-그래서 고정 문장은 미리 녹음해 두고, 앱은 180ms 묵음 녹음(_preroll.ogg) 뒤에 문장 녹음들을 끊김 없이 이어 재생한다.
-녹음은 Ogg Opus(32kbps, 모노)로 넣는다. WAV는 APK 안에서 압축되지 않아 200문장이면 20MB를 넘는다.
+앱은 모든 안내를 Pleos TextToSpeech SDK(ON_DEVICE)로 합성한다. SDK를 쓸 수 없는 차량에서도 안전과 관련된 안내
+(어린이보호구역, 안전띠, 휴식)는 들리도록 이 문장들만 녹음해 두고, 앱은 180ms 묵음 녹음(_preroll.ogg) 뒤에 이어 재생한다.
+녹음은 Ogg Opus(32kbps, 모노)로 넣는다.
 
 준비: pip install sherpa-onnx soundfile numpy
       모델 sherpa-onnx-supertonic-3-tts-int8-2026-05-11 (영상 프로젝트 CLAUDE_CODE_GUIDE.md 참조), ffmpeg
 예)  python tools/make_voice_clips.py --model-dir <모델 폴더>
-     python tools/make_voice_clips.py --model-dir <모델 폴더> --only-missing   # 새 문장만 녹음하고 있던 녹음은 그대로 둔다
 
-문장(text)은 core-judge Announcements가 만드는 문자열과 같아야 한다. 앱 단위 테스트가 빠진 문장을 잡는다.
+문장(text)은 core-judge Announcements의 상수와 같아야 한다. 앱 단위 테스트(VoiceAssetsTest)가 어긋난 문장을 잡는다.
 """
 import argparse
 import os
@@ -20,129 +19,13 @@ import tempfile
 import numpy as np
 import soundfile as sf
 
-KOREAN_NUMBERS = ["", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구", "십", "십일", "십이", "십삼", "십사", "십오",
-                  "십육", "십칠", "십팔", "십구", "이십"]
-MAX_LEVEL = 20
-THEMES = ["인력거", "가마", "꽃가마", "어가 행렬"]  # 소달구지는 Lv.0이라 해금 안내가 없다
-# (파일 이름, 지역, 테마, 단골 등급) — core-judge Region과 같아야 한다
-REGIONS = [
-    ("ulsan", "울산", "고래", ["노말 고래", "동 고래", "은 고래", "금 고래", "플래티넘 고래"]),
-    ("hoengseong", "횡성", "한우", ["3등급 한우", "2등급 한우", "1등급 한우", "1+ 한우", "투뿔(1++) 한우"]),
-]
-# 지역 도감에만 있는 지역(파일 이름, 지역, 상징, 들어올 때 인사) — core-judge Region·Announcements와 같아야 한다
-TOWNS = [
-    ("seoul", "서울", "해치", "한양 도성 행차입니다."), ("busan", "부산", "바다", "파도 소리가 반깁니다."),
-    ("daegu", "대구", "사과", "사과 향이 반깁니다."), ("incheon", "인천", "짜장면", "짜장면 냄새가 반깁니다."),
-    ("gwangju", "광주", "무등산", "무등산이 반깁니다."), ("daejeon", "대전", "한빛탑", "한빛탑이 반깁니다."),
-    ("gyeongju", "경주", "왕관", "천년 고도 행차입니다."), ("jeonju", "전주", "비빔밥", "비빔밥의 고장입니다."),
-    ("gangneung", "강릉", "커피", "커피 향이 반깁니다."), ("jeju", "제주", "돌하르방", "돌하르방이 반깁니다."),
-    ("yeosu", "여수", "밤바다", "밤바다가 반깁니다."), ("andong", "안동", "하회탈", "하회탈이 웃으며 반깁니다."),
-    ("cheongju", "청주", "직지", "금속활자 직지의 고장입니다."),
-]
-TOWN_GRADES = ["나그네", "길손", "단골손님", "이웃사촌", "명예 주민"]
-# 칭호(파일 이름, 이름) — core-judge Title과 같아야 한다
-TITLES = [("first_trip", "첫 행차"), ("trips_30", "길 위의 선비"), ("li_100", "백 리 나그네"), ("li_1000", "천 리 행차꾼"),
-          ("streak_7", "개근 선비"), ("streak_30", "개근 장원급제"), ("calm_20", "정체길 도사"), ("mapae_3", "암행어사의 벗"),
-          ("guardian_5", "아이 지킴이 대장"), ("night_5", "달빛 행차꾼"), ("rain_5", "우중 신선"), ("eco_10", "검약 대감"),
-          ("rice_10", "곳간 부자"), ("rest_3", "역참 단골"), ("smith_3", "대장간 단골"), ("stamp_5", "명소 수집가"),
-          ("town_all", "명소 완주"), ("regions_7", "팔도 유람객"), ("regular_top", "고을의 자랑"),
-          ("joryeong", "새재 넘은 나그네"), ("yeongnam", "영남대로 완주자"), ("samnam", "삼남대로 완주자"),
-          ("friday_5", "금요일의 해방자"),
-          ("dawn_3", "새벽 출근 장인"), ("guardian_50", "어린이의 수호신"), ("rice_100", "만석꾼"),
-          ("streak_100", "백일 개근 영의정"), ("li_10000", "만 리 행차꾼"), ("roads_all", "삼대로 대장정"),
-          ("regions_all", "방방곡곡 대장정"), ("stamps_all", "명소 도감 완성"), ("mapae_30", "어사또"),
-          ("top_3", "삼도 명예 주민"), ("rainy_night", "비 오는 밤의 나그네"), ("new_year", "제야의 행차")]
-# 주행 보상 동반자 합류 문장(거북이는 companion) — core-judge Buddy와 같아야 한다
-BUDDIES = [("rooster", "부지런한 닭이 행차에 합류했습니다."), ("owl", "부엉이가 밤길 행차에 합류했습니다."),
-           ("squirrel", "다람쥐가 곳간지기로 합류했습니다."), ("magpie", "까치가 반가운 소식을 물고 합류했습니다."),
-           ("sapsal", "삽살개가 행차를 지키러 합류했습니다."), ("tiger", "호랑이가 암행어사의 호위로 합류했습니다."),
-           ("dokkaebi", "문경새재 도깨비가 행차에 합류했습니다."),
-           ("dragon", "전설의 청룡이 구름을 타고 행차에 합류했습니다."), ("phoenix", "전설의 봉황이 날아와 행차에 합류했습니다."),
-           ("gumiho", "전설의 구미호가 만 리 길을 따라 행차에 합류했습니다.")]
-# 읽는 방법
-SPOKEN = {"3등급 한우": "삼등급 한우", "2등급 한우": "이등급 한우", "1등급 한우": "일등급 한우",
-          "1+ 한우": "원플러스 한우", "투뿔(1++) 한우": "투뿔 한우",
-          "N서울타워": "엔 서울타워", "김광석다시그리기길": "김광석 다시 그리기 길", "전주한옥마을": "전주 한옥마을",
-          "청주고인쇄박물관": "청주 고인쇄 박물관"}
-
-
-def josa(word, with_final, without_final):
-    """받침이 있으면 with_final(이/을), 없으면 without_final(가/를). core-judge String.josa와 같다."""
-    c = word[-1]
-    if not ("가" <= c <= "힣"):
-        return without_final
-    return with_final if (ord(c) - ord("가")) % 28 else without_final
-
-# 대장간 퀘스트(파일 이름, 제목) — core-judge Quest와 같아야 한다
-QUESTS = [("tire", "말편자를 갈 때입니다"), ("oil", "굴대에 기름칠할 때입니다")]
-# 옛길 원정 지점(길마다 출발점 제외) — core-judge Station과 같아야 한다
-STATIONS = [("pangyo", "판교"), ("yongin", "용인"), ("yangji", "양지"), ("juksan", "죽산"), ("chungju", "충주"),
-            ("joryeong", "문경새재 조령관"), ("yugok", "유곡"), ("nakdong", "낙동나루"), ("seonsan", "선산"),
-            ("daegu", "대구 경상감영"), ("cheongdo", "청도"), ("miryang", "밀양 영남루"), ("yangsan", "양산"), ("dongnae", "동래"),
-            # 삼남대로
-            ("namtaeryeong", "남태령"), ("suwon", "수원 화성행궁"), ("jinwi", "진위"), ("cheonan", "천안삼거리"),
-            ("gongju", "공주 금강나루"), ("eunjin", "은진"), ("samnye", "삼례"), ("jeonju", "전주 전라감영"), ("jeongeup", "정읍"),
-            ("galjae", "장성 갈재"), ("naju", "나주 금성관"), ("yeongam", "영암"), ("haenam", "해남"),
-            # 관동대로
-            ("mangu", "망우리 고개"), ("pyeonggu", "평구역"), ("yanggeun", "양근나루"), ("wonju", "원주 강원감영"), ("anheung", "안흥"),
-            ("jinbu", "진부"), ("daegwallyeong", "대관령"), ("gyeongpodae", "강릉 경포대"), ("jukseoru", "삼척 죽서루"),
-            ("uljin", "울진"), ("pyeonghae", "평해 월송정")]
-# 옛길 한 길을 마쳤을 때(파일 이름, 길, 다음 길) — core-judge Road와 같아야 한다
-ROADS = [("yeongnam", "영남대로", "삼남대로"), ("samnam", "삼남대로", "관동대로"), ("gwandong", "관동대로", "영남대로")]
-# 명소 — core-judge Landmark와 같아야 한다
-LANDMARKS = [("daewangam", "대왕암공원"), ("jangsaengpo", "장생포 고래문화마을"), ("taehwagang", "태화강 국가정원"),
-             ("ganjeolgot", "간절곶"), ("hoengseong_lake", "횡성호수길"), ("pungsuwon", "풍수원성당"),
-             ("birch_forest", "미술관 자작나무숲"),
-             ("gyeongbokgung", "경복궁"), ("n_seoul_tower", "N서울타워"), ("haeundae", "해운대"), ("gamcheon", "감천문화마을"),
-             ("kim_kwangseok", "김광석다시그리기길"), ("seomun", "서문시장"), ("wolmido", "월미도"), ("chinatown", "인천 차이나타운"),
-             ("mudeungsan", "무등산"), ("yangnim", "양림동 역사문화마을"), ("hanbit_tower", "한빛탑"), ("sungsimdang", "성심당"),
-             ("bulguksa", "불국사"), ("cheomseongdae", "첨성대"), ("jeonju_hanok", "전주한옥마을"), ("gyeonggijeon", "경기전"),
-             ("gyeongpo", "경포대"), ("anmok", "안목해변"), ("seongsan", "성산일출봉"), ("hallasan", "한라산"),
-             ("odongdo", "오동도"), ("yi_sunsin_square", "이순신광장"), ("hahoe", "하회마을"), ("wolyeonggyo", "월영교"),
-             ("goinswae", "청주고인쇄박물관"), ("sangdang", "상당산성"), ("suamgol", "수암골")]
-
-# (파일 이름, 앱이 말하려는 문장, 실제로 읽힐 문장)
+# (파일 이름, 문장) — core-judge Announcements와 같아야 한다
 PHRASES = [
-    ("boarding", "주상전하 납시오!", "주상전하 납시오!"),
-    ("mapae", "암행어사 출두요! 아까 10분, 차분히 잘 달리셨습니다. 마패를 하사합니다.",
-     "암행어사 출두요! 아까 십 분, 차분히 잘 달리셨습니다. 마패를 하사합니다."),
-    ("closing", "오늘도 안전하게, 행차하셨습니다.", "오늘도 안전하게, 행차 하셨습니다."),
-    *[(f"level_{n}", f"Lv.{n} 달성!", f"레벨 {KOREAN_NUMBERS[n]} 달성!") for n in range(1, MAX_LEVEL + 1)],
-    *[(f"theme_{i}", f"{label} 테마가 열렸습니다.", f"{label} 테마가 열렸습니다.") for i, label in enumerate(THEMES, start=1)],
-    ("school_zone", "어린이보호구역입니다. 천천히!", "어린이보호구역입니다. 천천히!"),
-    ("guardian", "아이 지킴이! 어린이보호구역을 천천히 지나셨습니다.", "아이 지킴이! 어린이보호구역을 천천히 지나셨습니다."),
-    ("charging", "쉬어가는 행차입니다. 오늘 모은 도감을 정리해 볼까요?", "쉬어가는 행차입니다. 오늘 모은 도감을 정리해 볼까요?"),
-    ("companion", "이달의 동반자 거북이가 행차에 합류했습니다.", "이달의 동반자 거북이가 행차에 합류했습니다."),
-    *[(f"region_{key}", f"{label}에 오셨습니다. {theme} 테마가 켜집니다.", f"{label}에 오셨습니다. {theme} 테마가 켜집니다.")
-      for key, label, theme, _ in REGIONS],
-    *[(f"grade_{key}_{i}", f"단골 등급이 올랐습니다. {g}입니다.", f"단골 등급이 올랐습니다. {SPOKEN.get(g, g)}입니다.")
-      for key, _, _, grades in REGIONS for i, g in enumerate(grades) if i > 0],
-    # Pleos Vehicle·NaviHelper SDK 연동 기능
-    ("eco", "검약 행차! 아낀 기운이 곳간에 쌀로 쌓였습니다.", "검약 행차! 아낀 기운이 곳간에 쌀로 쌓였습니다."),
-    ("rain_calm", "빗길을 차분히 달리셨습니다.", "빗길을 차분히 달리셨습니다."),
-    ("snow_calm", "눈길을 차분히 달리셨습니다.", "눈길을 차분히 달리셨습니다."),
-    ("night", "야행을 나섭니다. 초롱을 밝힙니다.", "야행을 나섭니다. 초롱을 밝힙니다."),
-    ("belt", "안전띠를 매셔야 개근으로 셉니다.", "안전띠를 매셔야 개근으로 셉니다."),
-    ("rest_due", "오래 달리셨습니다. 역마를 갈아탈 때입니다. 쉬어 가세요.", "오래 달리셨습니다. 역마를 갈아탈 때입니다. 쉬어 가세요."),
-    ("rest_area_ahead", "앞길에 휴게소가 있습니다.", "앞길에 휴게소가 있습니다."),
-    ("rest_search", "가까운 휴게소를 내비게이션에 띄웠습니다.", "가까운 휴게소를 내비게이션에 띄웠습니다."),
-    ("rested", "역참에서 잘 쉬셨습니다. 다시 길을 나섭니다.", "역참에서 잘 쉬셨습니다. 다시 길을 나섭니다."),
-    ("shield_used", "개근 보호권으로 개근 기록을 지켰습니다.", "개근 보호권으로 개근 기록을 지켰습니다."),
-    ("quest_done", "정비를 마쳤습니다. 개근 보호권을 드립니다.", "정비를 마쳤습니다. 개근 보호권을 드립니다."),
-    *[(f"quest_{key}", f"대장간 퀘스트입니다. {title}.", f"대장간 퀘스트입니다. {title}.") for key, title in QUESTS],
-    *[(f"station_{key}", f"옛길 원정, {label}에 이르렀습니다.", f"옛길 원정, {label}에 이르렀습니다.") for key, label in STATIONS],
-    *[(f"road_{key}", f"{label} 완주! 다음 길은 {nxt}입니다.", f"{label} 완주! 다음 길은 {nxt}입니다.") for key, label, nxt in ROADS],
-    *[(f"stamp_{key}", f"{label} 도착! 스탬프를 찍었습니다.", f"{SPOKEN.get(label, label)} 도착! 스탬프를 찍었습니다.")
-      for key, label in LANDMARKS],
-    # 지역 도감·칭호·동반자
-    *[(f"region_{key}", f"{label}에 오셨습니다. {hello}", f"{label}에 오셨습니다. {hello}") for key, label, _, hello in TOWNS],
-    *[(f"collect_{key}", f"지역 도감에 {label} {theme}{josa(theme, '이', '가')} 올랐습니다.",
-       f"지역 도감에 {label} {theme}{josa(theme, '이', '가')} 올랐습니다.")
-      for key, label, theme in [(k, l, t) for k, l, t, _ in REGIONS] + [(k, l, t) for k, l, t, _ in TOWNS]],
-    *[(f"grade_{key}_{i}", f"단골 등급이 올랐습니다. {label} {g}입니다.", f"단골 등급이 올랐습니다. {label} {g}입니다.")
-      for key, label, _, _ in TOWNS for i, g in enumerate(TOWN_GRADES) if i > 0],
-    *[(f"title_{key}", f"새 칭호를 얻었습니다. {label}.", f"새 칭호를 얻었습니다. {label}.") for key, label in TITLES],
-    *[(f"buddy_{key}", line, line) for key, line in BUDDIES],
+    ("school_zone", "어린이보호구역입니다. 천천히!"),
+    ("belt", "안전띠를 매셔야 개근으로 셉니다."),
+    ("rest_due", "오래 달리셨습니다. 역마를 갈아탈 때입니다. 쉬어 가세요."),
+    ("rest_area_ahead", "앞길에 휴게소가 있습니다."),
+    ("rest_search", "가까운 휴게소를 내비게이션에 띄웠습니다."),
 ]
 
 
@@ -153,7 +36,6 @@ def main():
     ap.add_argument("--speed", type=float, default=1.1)
     ap.add_argument("--rate", type=int, default=24000, help="Opus에 넣을 표본율(48000·24000·16000 등)")
     ap.add_argument("--bitrate", default="32k", help="Opus 비트레이트")
-    ap.add_argument("--only-missing", action="store_true", help="녹음 파일이 이미 있는 문장은 다시 만들지 않는다")
     ap.add_argument("--out", default=os.path.join(os.path.dirname(__file__), "..", "app", "src", "main", "assets", "voice"))
     a = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
@@ -169,14 +51,10 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     index = []
     with tempfile.TemporaryDirectory() as tmp:
-        for name, text, spoken in PHRASES:
-            out = os.path.join(a.out, name + ".ogg")
-            if a.only_missing and os.path.exists(out):
-                index.append(f"{text}\t{name}.ogg")
-                continue
+        for name, text in PHRASES:
             g = so.GenerationConfig()
             g.sid, g.speed, g.extra, g.num_steps = a.sid, a.speed, {"lang": "ko"}, 8
-            r = tts.generate(spoken, g)
+            r = tts.generate(text, g)
             x = np.asarray(r.samples, dtype=np.float32)
             # 앞뒤 무음은 잘라 낸다. 선행 묵음은 앱이 붙인다
             idx = np.where(np.abs(x) > 0.01)[0]
@@ -185,11 +63,12 @@ def main():
             raw = os.path.join(tmp, name + ".wav")
             sf.write(raw, x, r.sample_rate)
             subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", raw, "-ar", str(a.rate), "-ac", "1", "-c:a", "libopus",
-                            "-b:a", a.bitrate, "-application", "voip", "-map_metadata", "-1", out], check=True)
+                            "-b:a", a.bitrate, "-application", "voip", "-map_metadata", "-1",
+                            os.path.join(a.out, name + ".ogg")], check=True)
             index.append(f"{text}\t{name}.ogg")
             print(f"{name}: {len(x) / r.sample_rate:.2f}초  {text}")
 
-    # 선행 묵음(Pleos 권장 150~200ms). 앱이 모든 안내 앞에 재생한다
+    # 선행 묵음(Pleos 권장 150~200ms). 앱이 예비 녹음 앞에 재생한다
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono", "-t", "0.18", "-c:a", "libopus",
                     "-b:a", a.bitrate, "-application", "voip", os.path.join(a.out, "_preroll.ogg")], check=True)
 

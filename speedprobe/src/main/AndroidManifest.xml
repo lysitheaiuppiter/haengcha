@@ -27,6 +27,8 @@
     <uses-permission android:name="pleos.car.permission.PRIVATE_CAR_SAFETY" />
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
+    <!-- Pleos TextToSpeech SDK -->
+    <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
 
     <application
         android:name=".ProbeApp"
@@ -49,5 +51,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- adb로 TTS 시험을 거는 입구(TtsProbeReceiver) -->
+        <receiver
+            android:name=".TtsProbeReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="haengcha.speedprobe.TTS" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

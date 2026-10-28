@@ -1,6 +1,6 @@
 # 행차
 
-안전·연비 운전을 '볼거리가 열리는 놀이'로 바꾸는 Pleos Connect 차량용 앱입니다. 부드럽게 달리면 경험치가 쌓여 조선 테마 탈것(소달구지 → 인력거 → 가마 → 꽃가마 → 어가 행렬)이 열리고, 울산·횡성에 들어서면 지역 테마가 켜지고, 전국 15개 지역 도감(지역마다 3D 장면)·명소 34곳 스탬프·옛길 원정 세 길(영남·삼남·관동대로)·칭호 35종·주행으로만 합류하는 동반자 11종을 모읍니다. Pleos Vehicle·NaviHelper SDK로 전비(검약 행차), 경고등(대장간 퀘스트), 적산거리(옛길 원정), 전조등(야행), 와이퍼(비·눈 장면), 안전띠, 내비게이션 목적지·회전 안내를 읽어 판정과 연출에 씁니다. 주행 중에는 조작이 없고, 결과는 차를 세운 뒤 보여 줍니다.
+안전·연비 운전을 '볼거리가 열리는 놀이'로 바꾸는 Pleos Connect 차량용 앱입니다. 부드럽게 달리면 경험치가 쌓여 조선 테마 탈것(소달구지 → 인력거 → 가마 → 꽃가마 → 어가 행렬)이 열리고, 울산·횡성에 들어서면 지역 테마가 켜지고, 전국 15개 지역 도감(지역마다 3D 장면)·명소 34곳 스탬프·옛길 원정 세 길(영남·삼남·관동대로)·칭호 35종·주행으로만 합류하는 동반자 11종을 모읍니다. Pleos Vehicle·NaviHelper SDK로 전비(검약 행차), 경고등(대장간 퀘스트), 적산거리(옛길 원정), 전조등(야행), 와이퍼(비·눈 장면), 안전띠, 내비게이션 목적지·회전 안내를 읽어 판정과 연출에 쓰고, 안내 음성은 Pleos TextToSpeech SDK로 합성합니다. 주행 중에는 조작이 없고, 결과는 차를 세운 뒤 보여 줍니다.
 
 2026 Pleos Connect 앱 공모전 출품작(팀 COC). 기능·설계 근거는 기획서(`행차_기획서_6차.md`), 개발 기록과 검증 결과는 [docs/plans/2026-10-26-haengcha-app-plan.md](docs/plans/2026-10-26-haengcha-app-plan.md)에 있습니다.
 
@@ -8,8 +8,8 @@
 
 | 파일 | 용도 |
 |---|---|
-| [`apk/COC_haengcha_release.apk`](apk/COC_haengcha_release.apk) | 출시 빌드 0.2.0(41.0MB, 서명). 에뮬레이터에 직접 설치하면 주행 중 사용(DO)을 인정받지 못해 D단에서는 앱 화면이 시스템 화면 '주행 중에는 사용할 수 없습니다'로 가려집니다. 기록·판정·음성 안내는 동작합니다 |
-| [`apk/COC_haengcha_demo.apk`](apk/COC_haengcha_demo.apk) | 시연 빌드(46.3MB). 시연 명령(감찰·휴식 기준 줄이기, 지난 기록 넣기, 기온 바꾸기, 명소 경로)이 들어 있고 주행 중 계기판이 보입니다. 아래 '시연 순서'와 심사용 안내는 이 빌드로 합니다 |
+| [`apk/COC_haengcha_release.apk`](apk/COC_haengcha_release.apk) | 출시 빌드 0.2.0(53.6MB, 서명). 에뮬레이터에 직접 설치하면 주행 중 사용(DO)을 인정받지 못해 D단에서는 앱 화면이 시스템 화면 '주행 중에는 사용할 수 없습니다'로 가려집니다. 기록·판정·음성 안내는 동작합니다 |
+| [`apk/COC_haengcha_demo.apk`](apk/COC_haengcha_demo.apk) | 시연 빌드(60.2MB). 시연 명령(감찰·휴식 기준 줄이기, 지난 기록 넣기, 기온 바꾸기, 명소 경로)이 들어 있고 주행 중 계기판이 보입니다. 아래 '시연 순서'와 심사용 안내는 이 빌드로 합니다 |
 
 두 APK는 같은 키로 서명해 기록을 지우지 않고 서로 덮어 설치할 수 있습니다.
 
@@ -30,19 +30,19 @@ python tools/vc_drive.py --scenario calm --out calm.csv
 
 | 경로 | 내용 |
 |---|---|
-| `app/` | 행차 앱. 주행 엔진을 Android에 잇는 연결 층(`DriveController`: 시계, Handler, 설정·기록·일지, 차량 신호·내비게이션), 위치(`LocationSource`), 기록(`TripStore`), 진행 중 주행 일지(`TripJournalFile`), 포그라운드 서비스(`CollectService`), 녹음 음성 안내(`VoiceGuide`), Compose 화면 |
+| `app/` | 행차 앱. 주행 엔진을 Android에 잇는 연결 층(`DriveController`: 시계, Handler, 설정·기록·일지, 차량 신호·내비게이션), 위치(`LocationSource`), 기록(`TripStore`), 진행 중 주행 일지(`TripJournalFile`), 포그라운드 서비스(`CollectService`), 음성 안내(`VoiceGuide`: Pleos TTS SDK, 탑승 외침·안전 안내 녹음), Compose 화면 |
 | `core-judge/` | 순수 Kotlin. 판정 규칙(`haengcha.judge`: 급가속·급감속, 경험치·레벨, 개근과 보호권, 암행어사 감찰, 지역·단골 등급, 어린이보호구역, 칭호·동반자, 검약 행차, 빗길·눈길, 대장간 퀘스트, 옛길 원정, 명소 도착, 역참, 안내 타이밍, 주행 일지)과 주행 엔진(`haengcha.drive`: 신호 → 주행 판단 → 저장 → 안내·축하 연출, 기능별 부품). 가짜 시계와 차량 신호로 주행을 재생하는 통합 테스트가 있다 |
 | `vehicle/` | 수집 계층. AAOS Car API(차속·기어·충전 포트·주행 규제·바깥 기온), Pleos Vehicle SDK(`PleosVehicleSignals`), NaviHelper SDK(`PleosNavi`) |
-| `speedprobe/` | 차속 수신을 재고(`SpeedProbe`), Pleos SDK 값이 나오는지 확인하는(`PleosProbe`) 검증 앱 |
+| `speedprobe/` | 차속 수신을 재고(`SpeedProbe`), Pleos SDK 값이 나오는지(`PleosProbe`), Pleos TTS SDK로 합성되는지(`TtsProbe`) 확인하는 검증 앱 |
 | `assets3d/models/` | Blender로 만든 3D 모델(glTF) 7종 |
-| `tools/` | 주행 시나리오 재생(`vc_drive.py`), 프로브 분석, 음성 녹음 생성, Blender 모델 스크립트(`models/`), 정차 화면 렌더(`render3d/`, 도감 지역 장면은 `towns.js`) |
+| `tools/` | 주행 시나리오 재생(`vc_drive.py`), 프로브 분석, 안전 안내 예비 녹음 생성, Blender 모델 스크립트(`models/`), 정차 화면 렌더(`render3d/`, 도감 지역 장면은 `towns.js`) |
 | `docs/` | 개발 계획·검증 기록, 제출용 앱 아이콘 |
 
 앱에 들어가는 그림·영상·음성(`app/src/main/assets`)은 모두 저장소에 있어서, 빌드만 하면 됩니다. 다시 만드는 방법은 아래 '그림·음성 다시 만들기'에 있습니다.
 
 ## Pleos SDK 연동 기능
 
-`ai.pleos.playground:Vehicle:2.3.2`와 `ai.pleos.playground:NaviHelper:3.0.5`를 씁니다(공개 Maven 저장소, 인증 없음). 항목마다 처음 읽기를 해 보고, 차량이 지원하지 않으면 그 기능만 빠집니다.
+`ai.pleos.playground:Vehicle:2.3.2`, `ai.pleos.playground:NaviHelper:3.0.5`, `ai.pleos.playground:TextToSpeech:3.3.1`을 씁니다(공개 Maven 저장소, 인증 없음). 항목마다 처음 읽기를 해 보고, 차량이 지원하지 않으면 그 기능만 빠집니다.
 
 | 기능 | 읽는 값 | 판정(임시값) | 에뮬레이터 |
 |---|---|---|---|
@@ -55,6 +55,7 @@ python tools/vc_drive.py --scenario calm --out calm.csv
 | 날씨 장면 | 와이퍼, 바깥 기온(AAOS) | 와이퍼가 돌면 비, 1도 이하면 눈. 2분 넘게 젖은 길을 급조작 없이 달리면 +15XP | 기온은 25도 고정이라 눈은 디버그로 기온을 바꿔 시연 |
 | 역참에서 쉬어가기 | NaviHelper 회전 안내(휴게소), 휴게소 검색 화면 | 2시간 쉬지 않고 달리면 안내하고, 경로 위 휴게소가 없으면 내비게이션에 휴게소 검색을 띄움. 15분 넘게 쉬고 떠나면 +20XP | 동작(디버그로 시간을 줄여 시연) |
 | 도착 스탬프 | NaviHelper 목적지·도착 | 내비게이션이 도착을 알리거나, 목적지 300m 밖에서 출발해 300m 안에서 주행을 끝내면 도착. 목적지 이름이 명소(15개 지역 34곳)면 스탬프, 첫 도착 +20XP | 내비게이션 위치가 움직이지 않아 앱 위치와 목적지 좌표로 판정 |
+| 음성 안내 | TextToSpeech SDK(ON_DEVICE, 네트워크·앱 등록 필요 없음) | 모든 안내 문장을 차량 Speech Service로 합성. 탑승 외침만 녹음, SDK를 못 쓰면 안전 안내 5문장만 예비 녹음 | 동작(메모리가 부족하면 첫 소리가 몇 초 늦음) |
 | 안내 타이밍 | NaviHelper 다음 회전 거리 | 다음 회전이 300m 안이면 행차 음성을 미루고, 지나면 냄(최대 30초, 어린이보호구역 안내는 미루지 않음) | 동작 |
 
 ## 준비물
@@ -152,7 +153,7 @@ adb exec-out run-as haengcha.app --user 10 cat files/trips.csv
 
 앱 영역을 두 칸으로 나눠 둔 상태에서 행차가 가운데 칸으로 열리면, 행차가 내비게이션을 앞으로 불러 **[Driving View | 내비게이션 | 행차]** 로 자리 잡습니다(길 안내를 운전자 가까이에 둠). 운전자 메뉴의 '화면 배치'에서 끌 수 있습니다.
 
-처음 설치한 상태에서 1~9가 약 15분, 10~16이 약 20분입니다. 디버그 빌드나 `apk/COC_haengcha_demo.apk`를 씁니다. 같은 흐름을 에뮬레이터에서 녹화한 시연 영상(`haengcha_demo.mp4`, 3분 23초, 앱 안내 음성 포함)을 제출 자료와 함께 냅니다.
+처음 설치한 상태에서 1~9가 약 15분, 10~16이 약 20분입니다. 디버그 빌드나 `apk/COC_haengcha_demo.apk`를 씁니다. 같은 흐름을 에뮬레이터에서 녹화한 시연 영상(`haengcha_demo.mp4`, 3분 18초, 앱 안내 음성 포함)을 제출 자료와 함께 냅니다.
 
 1. **정차 화면.** 궁궐 마당 단상 위에 소달구지, Lv.0. 배경에서 초롱 불빛이 일렁입니다. 오른쪽 위 메뉴는 도감·동반자·상점·운전자입니다.
 2. **차분한 출퇴근.** `calm`을 재생합니다. D단에 들어가면 "주상전하 납시오!"와 함께 화면이 계기판으로 바뀌고 탈것은 단상에서 내려와 화면 안쪽(배경 지평선)으로 달려가는 뒷모습이 됩니다. 이번 주행 거리와 경험치, 1초마다 차오르는 1분 안전 구간 게이지, 지난 구간 칸, 옛길 원정의 다음 역참까지 남은 거리가 보이고, 구간을 무사히 마치면 "+10XP" 알림 띠가 뜹니다. 배경 영상은 멈추고 값과 연출은 1초에 한 번만 바뀝니다(주행 규제의 영상 금지를 따름). P단으로 돌아오면 +50XP와 "오늘도 안전하게, 행차하셨습니다."가 나옵니다.
@@ -204,10 +205,8 @@ adb exec-out run-as haengcha.app --user 10 cat files/trips.csv
 모두 저장소에 결과물이 있으므로 고칠 때만 필요합니다.
 
 ```bash
-# 안내 음성 녹음(문장을 바꿨을 때). sherpa-onnx, soundfile, numpy, ffmpeg와 Supertonic 3 모델이 필요
+# 안전 안내 예비 녹음(SDK를 못 쓸 때 재생, 문장을 바꿨을 때). sherpa-onnx, soundfile, numpy, ffmpeg와 Supertonic 3 모델이 필요
 python tools/make_voice_clips.py --model-dir <sherpa-onnx-supertonic-3-tts-int8-2026-05-11 폴더>
-# 새 문장만 녹음하고 있던 녹음은 그대로 둘 때
-python tools/make_voice_clips.py --model-dir <모델 폴더> --only-missing
 
 # 3D 모델(Blender 5.2 파이썬 모듈 bpy가 설치된 파이썬으로)
 python tools/models/joseon_set.py --out assets3d/models -- ox_cart rickshaw gama kkotgama eoga
@@ -224,8 +223,9 @@ node tools/render3d/render.mjs
 
 - 정차 화면의 움직이는 배경은 미리 렌더한 영상입니다. Pleos 에뮬레이터의 WebView가 캔버스·WebGL을 화면에 합성하지 못해 앱 안에서 three.js를 실시간으로 돌리지 않습니다.
 - 직접 설치한 출시 빌드는 에뮬레이터에서 주행 중 사용(DO)을 인정받지 못해, D단에서는 시스템이 행차 화면을 '주행 중에는 사용할 수 없습니다'로 가립니다. 디버그 빌드는 주행 계기판이 보이므로 주행 화면 시연은 디버그 빌드로 합니다. 기록·판정·음성 안내는 화면과 상관없이 동작합니다.
-- 안내 녹음은 Ogg Opus(32kbps, 254문장 3.1MB)입니다. WAV는 APK 안에서 압축되지 않아 23MB였습니다. 앱은 녹음을 풀어 잇지 않고 180ms 묵음 녹음 뒤에 문장 녹음들을 끊김 없이 이어 재생합니다(에뮬레이터 코덱으로 미리 풀면 3초 문장에 1초 넘게 걸림). 요청부터 재생까지 0.1초 남짓입니다.
-- 위치는 Android 위치 API, 음성은 미리 녹음한 문장입니다. Pleos FusedLocation·TTS SDK가 준비 중이기 때문입니다. 차속·기어·주행 규제는 Pleos SDK에 없어 AAOS Car API로 읽습니다.
+- 안내 음성은 Pleos TextToSpeech SDK 3.3.1의 ON_DEVICE 모드로 합성합니다(차량 Speech Service가 합성·재생, 네트워크·앱 등록 필요 없음). 'Lv.3', '1+ 한우'처럼 읽기 어려운 표기는 소리로만 고쳐 읽습니다(`Spoken`). 탑승 외침 '주상전하 납시오!'는 팀원 목소리로 만든 녹음(5.8초)을 그대로 쓰고, SDK를 못 쓰는 차량에서는 안전 안내 5문장(어린이보호구역·안전띠·휴식)만 예비 녹음(Ogg Opus)으로 재생합니다.
+- Speech Service는 재생할 때 오디오 포커스를 잡지 않아, 앱이 안내 앞뒤로 일시 포커스를 잡고 놓습니다. 에뮬레이터에서 TTS 합성은 메모리가 넉넉하면 0.6초 안에 끝나지만, 메모리가 모자라 스왑이 돌면 첫 소리까지 6초 넘게 걸린 적이 있습니다. 시연할 때는 에뮬레이터 메모리를 4GB 이상으로 두고 다른 앱을 닫습니다.
+- 위치는 Android 위치 API로 읽습니다. Pleos FusedLocation SDK(1.1.3)는 아직 붙이지 않았습니다. 차속·기어·주행 규제는 Pleos SDK에 없어 AAOS Car API로 읽습니다.
 - 경고등(Telltale) 조회 권한 `PRIVATE_CAR_SAFETY`는 문서상 signature|privileged입니다. 에뮬레이터에서는 일반 권한이라 읽히지만, 출시 때 App Market과 협의해야 합니다. 못 받으면 대장간 퀘스트는 엔진오일 잔량 신호만, 안전띠는 체결 신호만 씁니다.
 - 에뮬레이터 내비게이션은 차 위치가 움직이지 않습니다(에뮬레이터 GPS의 NMEA 문장 체크섬이 맞지 않아 버림). 그래서 회전 거리가 줄지 않고 도착 알림도 오지 않아, 도착은 앱 위치와 목적지 좌표로 판정합니다. 실차에서는 두 방식이 함께 동작합니다.
 - 배터리 용량은 차량에서 읽지 못해 에뮬레이터 차량 값(77.4kWh)으로 전비를 계산합니다.
@@ -238,7 +238,8 @@ node tools/render3d/render.mjs
 - three.js, GLTFLoader, RoomEnvironment (`tools/render3d/vendor`): MIT
 - Microsoft Fluent Emoji 3D 아이콘(지역·동반자·마패·아이 지킴이·콜라보 캐릭터): MIT, [라이선스](app/src/main/assets/licenses/FluentEmoji-MIT.txt)
 - 원정·퀘스트·도감·칭호·동반자 패널과 축하 연출의 그림 글자는 기기의 시스템 이모지 글꼴로 그립니다(앱에 넣지 않음).
-- Pleos Vehicle SDK 2.3.2, NaviHelper SDK 3.0.5: Pleos Playground 공개 Maven 저장소
-- 안내 음성: Supertonic 3(sherpa-onnx int8, OpenRAIL-M)로 합성
+- Pleos Vehicle SDK 2.3.2, NaviHelper SDK 3.0.5, TextToSpeech SDK 3.3.1: Pleos Playground 공개 Maven 저장소
+- 안내 음성: Pleos TextToSpeech SDK(차량 Speech Service). 안전 안내 예비 녹음 5문장은 Supertonic 3(sherpa-onnx int8, OpenRAIL-M)로 합성
+- 탑승 외침 '주상전하 납시오!': 팀원이 직접 외친 녹음으로 목소리를 복제해 VoiceStudio(OmniVoice)로 합성
 - 급가속·급감속 판정 방식: [운전 습관 개선을 위한 위험 운전 분석 어플리케이션의 설계 및 구현 (KoreaScience)](https://www.koreascience.or.kr/article/CFKO201531751944204.pdf)
 - 3D 모델, 정차 화면 그림·영상, 앱 아이콘은 팀에서 만들었습니다.

@@ -26,6 +26,8 @@ android {
         targetSdk = 35
         versionCode = 2
         versionName = "0.2.0"
+        // Pleos TTS SDK 의존성의 네이티브 라이브러리는 차량(arm64)과 에뮬레이터(x86_64)용만 넣는다
+        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
 
     signingConfigs {
@@ -67,6 +69,8 @@ android {
 
 dependencies {
     implementation(project(":vehicle"))
+    // 음성 안내 합성(VoiceGuide, ON_DEVICE 모드)
+    implementation(libs.pleos.tts)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)

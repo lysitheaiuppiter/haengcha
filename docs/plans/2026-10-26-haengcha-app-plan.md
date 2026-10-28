@@ -4,7 +4,7 @@ type: plan
 status: in-progress
 created: 2026-10-26
 updated: 2026-10-28
-scope: 행차 앱 MVP 개발 계획, 개발 환경, 에뮬레이터 검증 결과(차속, 판정, 감찰, 음성, 지역, 어린이보호구역, 주행 복원, 정차 화면, Pleos Vehicle·NaviHelper SDK 연동 기능, 세로 화면·시연 빌드, 지역 도감·칭호·동반자, 축하 연출 음성, 옛길 세 길, 제출용 GitHub 저장소)
+scope: 행차 앱 MVP 개발 계획, 개발 환경, 에뮬레이터 검증 결과(차속, 판정, 감찰, 음성, 지역, 어린이보호구역, 주행 복원, 정차 화면, Pleos Vehicle·NaviHelper SDK 연동 기능, 세로 화면·시연 빌드, 지역 도감·칭호·동반자, 축하 연출 음성, 옛길 세 길, 제출용 GitHub 저장소, Pleos TTS SDK 시험과 안내 음성 전환)
 related:
   - C:\Users\smuge\OneDrive\Repository\HyundaiMotors_APP\행차_기획서_6차.md (4·8·9·12·13·15장)
   - README.md (빌드·실행·에뮬레이터 시연 순서)
@@ -18,7 +18,7 @@ related:
   - tools/models/
   - tools/render3d/
   - docs/submission/haengcha-demo-guide.md
-last_verified_commit: 6199be8 (2026-10-28, 5.11의 검증 결과와 같은 코드. 커밋 작성자·메시지를 정리하기 전 해시는 f00b517)
+last_verified_commit: 6199be8 (2026-10-28, 5.11의 검증 결과와 같은 코드. 커밋 작성자·메시지를 정리하기 전 해시는 f00b517). 5.13·5.14는 그 뒤 커밋하지 않은 작업 트리
 ---
 
 # 행차 앱 개발 계획
@@ -45,9 +45,11 @@ Pleos SDK 제공 상태 (Workspace 기준, 2026-10-26)
 |---|---|---|
 | Vehicle State | 사용 가능 (조회 11개 항목) | `ai.pleos.playground:Vehicle:2.3.2` |
 | NaviHelper | 사용 가능 (2개 항목) | `ai.pleos.playground:NaviHelper:3.0.5` |
-| FusedLocation, TextToSpeech, SpeechToText, Vehicle Control | 준비 중 | - |
+| TextToSpeech | 공개됨(3.3.1, 2026-10-13). 10-28 에뮬레이터에서 합성 확인(5.13) | `ai.pleos.playground:TextToSpeech:3.3.1` |
+| FusedLocation, SpeechToText | 공개됨(1.1.3, 3.3.1). 아직 시험하지 않음 | `ai.pleos.playground:FusedLocation:1.1.3`, `ai.pleos.playground:SpeechToText:3.3.1` |
+| Vehicle Control | 준비 중 | - |
 
-Maven 저장소 `https://nexus-playground.pleos.ai/repository/maven-releases/`는 인증 없이 받을 수 있다. 위치는 Android 위치 API(`LocationManager`)로, 음성은 미리 녹음한 문장으로 대체한다(5.2).
+Maven 저장소 `https://nexus-playground.pleos.ai/repository/maven-releases/`는 인증 없이 받을 수 있다. 위치는 Android 위치 API(`LocationManager`)로, 음성은 미리 녹음한 문장으로 대체한다(5.2). 10-26에는 Workspace 목록만 보고 TTS·STT·FusedLocation을 '준비 중'으로 적었는데, Maven에는 그 전에 올라와 있었다(5.13).
 
 렌더 도구
 - Blender 5.2(파이썬 모듈 `bpy`)로 모델을 만든다. 스크래치 가상환경에 설치해 쓰며 저장소에는 넣지 않는다.
@@ -63,7 +65,7 @@ Maven 저장소 `https://nexus-playground.pleos.ai/repository/maven-releases/`�
 | `core-judge/` | 완료 | 판정 엔진(순수 Kotlin, JVM 테스트). 급가속·급감속, 1분 구간 경험치·평정심, 레벨·조선 테마, 개근, 주행 시작·종료(`TripTracker`), 암행어사 감찰(`Inspection`), 지역·단골 등급(`Places`), 어린이보호구역·아이 지킴이(`SchoolZone`), 주행 일지(`TripJournal`), 동반자(`Companion`), 기록 형식(`TripRecord`)·진행 요약, 안내 문구(`Announcements`). SDK 연동 판정: 검약·빗길·야행·안전띠(`Extras`), 옛길 원정(`Journey`), 대장간 퀘스트(`Maintenance`), 명소 도착(`Landmarks`), 역참·안내 타이밍(`Rest`), 개근 보호권(`Progress`). 주행 엔진(`haengcha.drive`): `DriveEngine`(신호·위치 → 주행 시작·종료 → 판정 → 저장 → 음성 → 축하 연출), 기능별 부품(`QuestDesk`, `RestStop`, `ArrivalWatch`, `LiveBoard`, `SceneSignals`), 바깥 연결 인터페이스(`Clock`, `Scheduler`, `RecordStore`, `JournalStore`, `DriveSettings`, `VehicleListener`, `NaviListener`), 화면 상태(`DriveUiState`) |
 | `vehicle/` | 완료 | 수집 계층. AAOS Car API로 차속(최대 주기)·기어·충전 포트·주행 규제(영상 금지 여부 포함)·바깥 기온, Pleos Vehicle SDK(`PleosVehicleSignals`)로 잔량·전비·적산거리·경고등·엔진오일·안전띠·전조등·와이퍼, NaviHelper(`PleosNavi`)로 목적지·도착·회전 안내를 받고 휴게소 검색 화면을 요청한다 |
 | `app/` | 완료(시연판) | `DriveController`(주행 엔진을 Android에 잇는 연결 층: SystemClock, 메인 Handler, 차량 신호·내비게이션 구독), `LocationSource`, `TripStore`(운전자별 `trips*.csv`), `TripJournalFile`(진행 중 주행 일지), `CollectService`(위치 유형 포그라운드 서비스), `AppPrefs`(운전자·콜라보 보유), `VoiceGuide`, Compose 화면(정차 화면, 주행 계기판, 어린이보호구역, 도감·쉬어가는 행차, 동반자, 콜라보 상점, 운전자 전환, 축하 연출). 디버그 빌드 전용 `DebugReceiver`. 패키지명은 임시 `haengcha.app` |
-| `app/src/main/assets/voice/` | 완료 | 안내 문장 75개 녹음(SDK 연동 기능 34개 추가, `--only-missing`으로 기존 녹음은 그대로)(소개 영상과 같은 Supertonic 3 0번 목소리, 22.05kHz 모노). `tools/make_voice_clips.py`로 다시 만든다 |
+| `app/src/main/assets/voice/` | 완료 | 탑승 외침 녹음 1개와 Pleos TTS SDK를 못 쓸 때 재생할 안전 안내 예비 녹음 5문장(Supertonic 3 0번 목소리), 180ms 묵음. 안내는 Pleos TTS SDK로 합성한다(5.14). 예비 녹음은 `tools/make_voice_clips.py`로 다시 만든다 |
 | `app/src/main/assets/motion/` | 완료 | 움직이는 배경 22편(궁궐, 울산 등급 5, 횡성 등급 5 × landscape·portrait), 11초 반복 H.264, 합계 5.4MB. `motion.json`은 정지 그림과 같은 순간의 영상 시각 |
 | `app/src/main/assets/scenes/`, `icons/` | 완료 | 정지 배경 22장, 탈것 레이어 10장(투명), 도감 아이콘 5장 |
 | `assets3d/models/` | 완료 | Blender 모델 glTF 7종(소달구지·인력거·가마·꽃가마·어가 행렬·고래·한우) |
@@ -88,7 +90,7 @@ Maven 저장소 `https://nexus-playground.pleos.ai/repository/maven-releases/`�
 | 10/27 | 앱의 `DriveController`(692줄)를 순수 Kotlin 주행 엔진(`core-judge`의 `haengcha.drive`)과 기능별 부품으로 나누고, 앱에는 연결 층만 남김. 가짜 시계·저장소·차량 신호로 주행을 재생하는 통합 테스트 16개 추가(5.5) (완료) |
 | 10/27 | 세로(한 칸) 화면 점검, 시연 빌드(출시 키 서명, `-demo`)와 심사용 안내문(5.6). 지역 도감 14곳·명소 31곳·칭호 34종·동반자 11종, 도감 지역 12곳 3D 장면(5.7). 주행 중 탈것 뒷모습과 소실점 초롱, 화면 배치 기본값(5.8). 녹음 Opus 전환, 바다 장면 유등, 두 칸 화면 확인(5.9) (완료) |
 | 10/27 | 주차 후 안내를 축하 연출 한 장씩에 맞춤, 옛길 원정 세 길(삼남대로·관동대로 추가), 청주(직지) 지역·명소·3D 장면, 시연 영상 다시 녹화(5.11) (완료) |
-| 10/28 ~ 11/12 | Pleos 문의(DO 인정 절차, TTS SDK 공개 일정, Driving View 테마 연동), 출시 서명 방식 결정과 서명 APK, 데브박스·실차 확인, 시연 영상에 앱 화면 반영 |
+| 10/28 ~ 11/12 | Pleos 문의(DO 인정 절차, TTS SDK 서버 합성 조건, Driving View 테마 연동), 출시 서명 방식 결정과 서명 APK, 데브박스·실차 확인, 시연 영상에 앱 화면 반영 |
 | 11/13 ~ 11/15 | 통합 테스트, 제출 |
 
 정해야 할 것
@@ -176,7 +178,7 @@ Maven 저장소 `https://nexus-playground.pleos.ai/repository/maven-releases/`�
 | 기어 D → P (움직임 없음) | 주행으로 보지 않음. 저장·안내 없음 |
 
 - 음성은 탑승("주상전하 납시오!")과 주차 후 안내 모두 `NOTIFICATION` 용도, `GAIN_TRANSIENT_MAY_DUCK` 포커스를 받아(grant) 끝까지 재생됐다.
-- **Pleos 에뮬레이터의 음성 엔진(`ai.pleos.playground.caas`)은 Android 표준 `TextToSpeech` API로 쓸 수 없다.** TTS 서비스 인텐트 필터에 `DEFAULT` 카테고리가 없어 엔진 목록에 잡히지 않는다(앱이 본 엔진 목록이 비어 있음). `pleos.car.permission.TTS_SERVICE`(일반 권한)와 `<queries>`를 선언해도 같다. 그래서 고정 문장은 녹음으로 재생하고, 녹음이 없는 문장은 쓸 수 있는 TTS 엔진이 있을 때만 합성한다.
+- **Pleos 에뮬레이터의 음성 엔진(`ai.pleos.playground.caas`)은 Android 표준 `TextToSpeech` API로 쓸 수 없다.** TTS 서비스 인텐트 필터에 `DEFAULT` 카테고리가 없어 엔진 목록에 잡히지 않는다(앱이 본 엔진 목록이 비어 있음). `pleos.car.permission.TTS_SERVICE`(일반 권한)와 `<queries>`를 선언해도 같다. 그래서 고정 문장은 녹음으로 재생하고, 녹음이 없는 문장은 쓸 수 있는 TTS 엔진이 있을 때만 합성한다. 같은 엔진을 Pleos TextToSpeech SDK로는 쓸 수 있다(5.13).
 - 선행 묵음은 Pleos 가이드대로 데이터 앞에 180ms를 붙인다. 여러 문장은 하나로 이어 맨 앞에만 넣는다.
 
 Virtual Console API (페이지 스크립트에서 확인)
@@ -308,6 +310,32 @@ Virtual Console API (페이지 스크립트에서 확인)
 - 접수양식은 공유 링크와 첨부자료에 실명·계정정보가 드러나지 않게 하라고 해서, push 전에 커밋 작성자를 모두 `Team COC`(GitHub noreply 주소)로 바꾸고, 커밋 메시지의 AI 공동 작성자 줄도 지웠다(이후 커밋에도 넣지 않음). 커밋 해시가 바뀌었고, 이 저장소의 git `user.name`·`user.email`도 같은 값으로 두었다. 바꾸기 전 저장소는 git bundle로 따로 남겼다.
 - 원격: https://github.com/lysitheaiuppiter/haengcha (비공개). 심사용 GitHub 계정은 공지되면 Collaborator로 초대하고 그 계정에서 접근되는지 마감 전에 확인한다. 개인 계정 비공개 저장소의 Collaborator는 쓰기 권한도 받는다.
 
+### 5.13 Pleos TextToSpeech SDK 시험 (2026-10-28, 에뮬레이터)
+
+- 10-26에는 Workspace SDK 목록에서 TTS·STT·FusedLocation이 '준비 중'이라 녹음 음성으로 갔다. 10-28에 Pleos Maven을 다시 보니 TextToSpeech 3.3.0(09-22)·3.3.1(10-13), SpeechToText 3.3.1(10-13), FusedLocation 1.1.3(10-19)이 올라와 있었고, 개발자 가이드에도 TTS SDK v3.3.1 문서가 있다.
+- 사용 순서(가이드): `TextToSpeech(context, Mode)` → `initialize()` → `addEventListener()` → `setLocale(Locale.KOREA)` → `speak(text)`. 모드는 HYBRID(기본, 서버 우선·실패 시 온디바이스), SERVER, ON_DEVICE(앱 등록·네트워크 필요 없음). 서버 합성은 Workspace 프로젝트의 Client ID/Secret으로 `registerApp()`을 해야 한다. 권한은 `pleos.car.permission.TTS_SERVICE`(caas가 정의한 normal 권한이라 설치 때 허용).
+- 검증 앱에 `TtsProbe`를 넣어 adb로 문장을 읽혔다: `adb shell am broadcast --user 10 -a haengcha.speedprobe.TTS -p haengcha.speedprobe --ei preset 0 --es mode ON_DEVICE` (`--ez stop true`로 중지).
+- ON_DEVICE, 한국어 5문장: 모두 onStart·onDone까지 왔다. 초기화 5~88ms, 요청부터 onStart까지 11~83ms(첫 요청이 83ms. onStart는 재생 준비 시점이고 소리가 나는 때가 아니었다, 5.14), 재생 중 RMS 최대 5,300~6,900. 세 문장짜리 긴 안내는 8.0초. `stop()`은 onStop으로 끝났다.
+- HYBRID는 앱 등록 없이도 재생됐다(서버 연결 없이 온디바이스로 넘어간 것으로 보임). SERVER는 앱 등록 없이 onError(UNKNOWN). Client Secret은 넣지 않았다.
+- 재생은 Speech Service(`ai.pleos.playground.caas`)의 AudioTrack(USAGE_MEDIA, CONTENT_TYPE_SPEECH, 22.05kHz 모노)이 맡는다. 재생 중 CarAudioService의 포커스 보유자가 비어 있었다. 내비게이션 안내와 겹치지 않게 하려면 앱이 직접 일시 포커스를 잡아야 한다.
+- SDK를 붙이면 검증 앱 디버그 APK가 10.2MB에서 29.6MB로 커졌다. TTS AAR은 0.14MB이고, 대부분은 의존성 `universal-access`(AAR 4.9MB, ABI별 네이티브 라이브러리)와 함께 들어오는 코드다.
+- 같은 날 행차 앱의 안내 음성을 이 SDK로 바꿨다(5.14).
+- 확인: `./gradlew :speedprobe:assembleDebug` 통과(JDK 17), 에뮬레이터 logcat(`TtsProbe`)과 `dumpsys audio`·`dumpsys car_service --services CarAudioService`.
+
+### 5.14 안내 음성을 Pleos TTS SDK로 전환 (2026-10-28, 에뮬레이터)
+
+- 모든 안내를 Pleos TextToSpeech SDK 3.3.1의 ON_DEVICE 모드로 합성한다(`VoiceGuide`). 화면 문구 가운데 읽기 어려운 표기(Lv.3, 1+ 한우, 붙여 쓴 명소 이름)는 `Spoken`이 소리로만 고쳐 넘긴다. 예전 녹음 249개와 표준 TTS·WAV 합성 경로(`Wav`)는 지웠다.
+- 탑승 외침 '주상전하 납시오!'만은 녹음을 늘 그대로 재생한다. 팀원이 직접 외친 녹음(앞 5.85초)을 참조 음성으로 VoiceStudio 1.30(OmniVoice, CPU)에서 목소리를 복제하고 '주상전하 납시오!'를 합성했다(5.8초, 앞뒤 다듬고 -16 LUFS, Opus 64k). VoiceStudio는 로컬 MCP(`http://127.0.0.1:3900/mcp/`의 `clone_voice`·`generate_speech`)로 불렀고, 언어는 `ko`로 넘겼다. 물결표로 끌거나 모음을 늘여 쓴 후보, 느린 후보도 만들었지만 기본 문장을 골랐다. 그 전에 Supertonic에 북·징·궁궐 울림을 얹은 외침과 끝소리를 길게 끄는 가락도 들어 봤지만 어색해서 쓰지 않았다.
+- SDK를 쓸 수 없거나 합성이 실패하면 안전 안내 5문장(어린이보호구역, 안전띠, 휴식 셋)만 예비 녹음으로 재생하고, 나머지 안내는 화면으로만 보인다.
+- Speech Service는 재생할 때 오디오 포커스를 잡지 않아 앱이 안내 앞뒤로 GAIN_TRANSIENT_MAY_DUCK을 잡고 놓는다. 차량 포커스 정책이 요청을 늦게 허용해(CarAudioService 기록상 9ms 뒤 허용) 앱은 거절로 알고 포커스가 남은 일이 있어, 거절돼도 반납하고 0.6초 뒤 한 번 더 청하게 했다.
+- SDK 이벤트에는 요청 구분이 없어 onStart 뒤의 onDone·onStop만 지금 안내의 끝으로 본다. 확인으로 끊으면 `stop()` 뒤 중지 알림(최대 1초)을 기다렸다가 다음 안내를 낸다.
+- 합성 지연: Speech Service 로그로 보면 onStart는 재생 준비 시점이고 소리는 합성 뒤에 나온다. 에뮬레이터 메모리가 넉넉하면 합성이 0.6초 안에 끝났고, 메모리가 모자라 스왑이 돌 때(사용 가능 365MB) 첫 소리까지 4~6초 걸렸다. 시연 녹화에서는 재생 시작부터 소리까지 0.5~1.2초였다(탑승 외침 녹음은 0.14~0.24초).
+- 시연 영상 다시 녹화(3분 18초): TTS 음성은 파일로 남지 않아 에뮬레이터 gRPC(`EmulatorController.streamAudio`)로 게스트 소리를 장면마다 받아 화면과 맞췄다(기기·PC 시계 차이를 장면마다 잼). 첫 장면은 [내비 | 다른 앱] 두 칸을 만든 뒤 행차를 새로 켜 배치를 보여 준다. 떠 있는 행차를 끄면 그 칸이 사라져 한 칸이 되기 때문이다. 에뮬레이터 내비게이션 지도는 예전처럼 하얗게 비어 보인다. 소개 영상은 s11 VOICE 화면과 나레이션 한 줄을 TTS에 맞게 고쳤다.
+- 첫 녹화본은 TTS 음성이 군데군데 끊겨 들렸다. Speech Service 기록상 언더런은 0건이었고, 원인은 소리를 받는 쪽이었다. 에뮬레이터는 게스트가 소리를 내는 동안 15~20ms짜리 패킷을 실제 시간만큼 보내고 조용할 때는 1ms 남짓한 패킷만 보내는데, 패킷 시각이 8~21ms씩 흔들릴 때마다 묵음을 채워 넣어 말 속에 구멍이 생겼다. 소리가 이어지는 동안은 패킷을 그대로 이어 쓰고, 조용하다가 소리가 다시 시작될 때만 시각에 맞춰 묵음을 채우게 고쳤다. 고친 뒤 받은 문장 길이는 엔진이 낸 길이(Speech Service `TotalWrittenBytes`)보다 앞뒤 무음만큼(약 0.25초) 짧을 뿐 빈 곳이 없다. 문장 사이 쉼은 TTS가 완전한 0으로 내므로 잘라 내지 않는다.
+- 녹화 조건: 에뮬레이터 CPU를 4개에서 8개로 늘렸다(게스트에는 6개로 잡힘, `config.ini`의 `hw.cpu.ncore`). 메모리를 6GB로 늘리면 부팅 뒤 `virtio: zero sized buffers` 오류로 꺼져 4GB로 둔다. 검증 앱(`speedprobe`) 화면을 띄우면 `PleosProbe`가 NaviHelper 경로(판교역)를 요청해, 이 경로가 남아 있으면 회전 안내 때문에 행차 음성이 밀린다. 녹화 전에 내비게이션 안내를 끈다.
+- 앱 크기: 출시 APK 53.6MB, 시연 APK 60.2MB(41.0·46.3MB에서 커짐). SDK 의존성 `universal-access`의 네이티브 라이브러리는 arm64-v8a·x86_64만 넣었다(`abiFilters`).
+- 확인: 테스트 119개 통과(core-judge 109, app 10. WAV 테스트를 빼고 읽기 고치기·녹음 색인 테스트를 넣음). 출시 빌드를 에뮬레이터에 깔아 'Pleos TTS 사용 가능(ON_DEVICE)'까지 확인했고 서명 인증서는 그대로다. 에뮬레이터 주행·주차 후 연출에서 안내 15건이 차례로 재생됐다(logcat `VoiceGuide`).
+
 ## 6. 검증 명령
 
 판정 엔진·주행 엔진과 앱 단위 테스트 (2026-10-27 결과: 121개 통과. `core-judge` 109(판정 87, 주행 엔진 통합 22), 앱 12(녹음 형식·용량, 장면 파일 확인 포함))
@@ -406,7 +434,7 @@ python tools/make_voice_clips.py --model-dir <sherpa-onnx-supertonic-3-tts-int8-
 ```bash
 python - <<'PY'
 import os, subprocess, zipfile
-files = sorted(f for f in subprocess.run(['git', 'ls-files', '-co', '--exclude-standard'], capture_output=True, text=True, check=True).stdout.split('\n') if f and os.path.isfile(f))
+files = sorted(f for f in subprocess.run(['git', 'ls-files', '-co', '--exclude-standard'], capture_output=True, text=True, check=True).stdout.split('\n') if f and os.path.isfile(f) and not f.startswith('apk/'))
 with zipfile.ZipFile('docs/submission/haengcha-0.2.0-source.zip', 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
     for f in files:
         z.write(f, 'haengcha/' + f)
@@ -419,16 +447,17 @@ PY
 - 결과(0.2.0, 주행 엔진 분리 뒤): 256개 파일. 최종 압축본을 그대로 풀어 빌드·테스트가 통과했다(디버그 APK 2개, 테스트 103개). 시험한 압축본과 최종본은 이 문서·README·`.gitignore` 같은 문서만 다르다.
 - 결과(0.2.0, 도감 확장·주행 뒷모습 뒤): 463개 파일, 36.1MB. 압축본을 그대로 풀어 `ANDROID_HOME`만 주고 빌드·테스트가 통과했다(디버그 APK 2개, 테스트 115개). 최종본은 이 결과 줄만 다르다. 안내문 PDF는 `.gitignore`로 뺐다.
 - 결과(0.2.0, 청주·옛길 세 길·축하 연출 음성 뒤): 505개 파일, 20.4MB. 압축본을 그대로 풀어 `ANDROID_HOME`만 주고 빌드·테스트가 통과했다(디버그 APK 2개, 테스트 121개). 최종본은 이 결과 줄만 다르다.
+- 결과(0.2.0, 안내 음성 TTS 전환 뒤): 259개 파일, 18.0MB(저장소의 `apk/`는 뺌). 압축본을 그대로 풀어 `ANDROID_HOME`만 주고 빌드·테스트가 통과했다(디버그 APK 2개, 테스트 119개). 탑승 외침을 VoiceStudio 녹음으로 바꾼 뒤 다시 만들어 같은 방법으로 확인했다(파일 수·크기·테스트 수 같음).
 - 결과(0.2.0, 녹음 Opus 전환 뒤): 464개 파일, 18.8MB(녹음 WAV를 빼서 36.1MB에서 줄었다). 풀어서 빌드·테스트가 통과했다(디버그 APK 2개, 테스트 117개). 최종본은 이 결과 줄만 다르다.
 
 ## 7. 남은 위험
 
 - 주행 중 화면은 DO 인정 여부와 앱 카테고리에 달려 있다(5.1). Mobility Services 심사에서 '차량 관리 서비스'로 인정받지 못할 수 있고, 정식 배포(Pleos App Market) 때 DO가 어떻게 인정되는지는 문서에 없어 partnership@pleos.ai 문의가 필요하다. 어느 경우든 주행 중 화면 없이 동작하므로 기능 범위는 줄지 않는다.
-- 안내 녹음은 Supertonic 3(OpenRAIL-M 라이선스)로 만들었다. 상업 배포 전에 라이선스 조건을 확인한다. 문장을 바꾸면 녹음을 다시 만들어야 하고, 녹음 누락은 앱 단위 테스트가 잡는다.
+- 안전 안내 예비 녹음 5문장은 Supertonic 3(OpenRAIL-M 라이선스)로 만들었다. 상업 배포 전에 라이선스 조건을 확인한다. 탑승 외침은 팀원 목소리를 복제해 합성한 것이라 권리 문제는 없다. VoiceStudio 앱은 AGPL-3.0이지만 앱에 넣지 않고 합성에만 썼다.
 - 음성 용도를 `NOTIFICATION`으로 정했지만 Pleos Interaction Matrix의 실제 값(문서에서 표가 텍스트로 나오지 않음)과 내비게이션 동시 재생은 확인하지 못했다. 행차 앱이 뒤에 있을 때의 재생도 아직 확인하지 않았다.
 - 테마 탈것을 왼쪽 Driving View(차량 모델 자리)에 띄우는 것이 원래 구상에 가깝지만, Driving View는 앱이 숨기거나 끌 수 없는 시스템 고정 영역이고 바꾸는 공개 API가 없다([App Structure and Behavior Model](https://document.pleos.ai/en/docs/pleos-only/vehicle-app-planning-guide/app-structure-screen-model)). 앱이 할 수 있는 것은 오른쪽 앱 영역(정차 화면)뿐이다.
 - 정차 화면은 미리 렌더한 영상·그림이라 탈것은 움직이지 않고 배경만 움직인다. 에뮬레이터 WebView 문제(5.3)가 실차에도 있는지는 모른다. 실차에서 WebGL이 되면 실시간 장면을 다시 검토할 수 있다.
-- 앱 크기: 출시 APK 41.0MB, 시연 APK 46.3MB(청주 장면·녹음 254문장 포함, 5.9·5.11). 남은 큰 몫은 코드 축소 없는 dex(22.4MB)와 움직이는 배경 영상(11.8MB)이다. R8을 켜면 dex를 크게 줄일 수 있지만 Pleos SDK의 리플렉션·AIDL 규칙을 확인해야 해 아직 끄고 둔다.
+- 앱 크기: 출시 APK 53.6MB, 시연 APK 60.2MB(Pleos TTS SDK 의존성 포함, 5.14). 남은 큰 몫은 코드 축소 없는 dex와 움직이는 배경 영상(11.8MB)이다. R8을 켜면 dex를 크게 줄일 수 있지만 Pleos SDK의 리플렉션·AIDL 규칙을 확인해야 해 아직 끄고 둔다.
 - 포그라운드 서비스는 화면이 보일 때 시작한다(위치 유형은 백그라운드에서 시작할 수 없음). 앱을 한 번도 열지 않고 부팅한 뒤에는 프로세스가 살아 있는 동안만 수집한다. 그래도 끊기면 주행 일지로 이어 가거나 마감한다.
 - 지역 범위는 시청·군청 중심의 원이고 어린이보호구역은 시연용 지정 좌표 1곳이다. 행정 경계·공공데이터 연동은 사업화 단계다.
 - 출시 서명 키는 이 PC에만 있다. 키를 잃으면 같은 패키지로 업데이트를 낼 수 없으니 회사 보관소 등에 따로 백업해야 한다. 릴리스는 코드 축소(R8) 없이 빌드한다.
@@ -436,7 +465,7 @@ PY
 - 판정 엔진은 에뮬레이터 기록 하나와 합성 프로필로만 검증했다. 실차 기록의 잡음·공백에서는 아직 확인하지 않았다.
 - 실차 차속 수신 주기를 아직 모른다. 데브박스나 실차를 확보하면 같은 프로브로 다시 잰다.
 - `distractionOptimized` 선언이 없는 화면이 주행 중 실제로 막히는지 확인하지 않았다.
-- FusedLocation, TTS, STT, Vehicle Control이 제출 전에 열리지 않으면 대체 구현으로 간다.
+- 실차에서 TTS 합성 지연과 한국어 음성 품질을 확인하지 않았다. 에뮬레이터는 메모리가 모자라면 첫 소리가 4~6초 늦었다(5.14). FusedLocation·STT는 시험하지 않았고, Vehicle Control은 아직 준비 중이다.
 - 빌드 경고 3건은 API 35에서 새 메서드로 바뀐 `registerCallback`, `status`다. 에뮬레이터가 API 34라 지금 코드를 유지한다.
 - 경고등 조회 권한 `PRIVATE_CAR_SAFETY`는 문서상 signature|privileged다. 에뮬레이터에서는 일반 권한이라 읽혔지만 출시 때 App Market 협의가 필요하다. 못 받으면 대장간 퀘스트는 엔진오일 잔량 신호만, 안전띠는 체결 신호만 쓴다.
 - 에뮬레이터는 주행 전비·엔진오일 잔량을 지원하지 않고, 바깥 기온은 25도 고정, 안전띠 체결 신호는 늘 '안 맴', 내비게이션 차 위치는 고정이다. 전비 SDK 경로, 오일 잔량 퀘스트, 체결 신호 판정, 내비게이션 도착 알림, 회전 거리 감소는 실차·데브박스에서 확인해야 한다.

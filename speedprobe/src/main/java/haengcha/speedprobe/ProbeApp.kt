@@ -9,10 +9,13 @@ class ProbeApp : Application() {
         private set
     lateinit var pleos: PleosProbe
         private set
+    lateinit var tts: TtsProbe
+        private set
 
     override fun onCreate() {
         super.onCreate()
         probe = SpeedProbe(this)
         pleos = PleosProbe(this)
+        tts = TtsProbe(this)
     }
 }

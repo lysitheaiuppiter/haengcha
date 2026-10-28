@@ -6,7 +6,10 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** 앱이 말할 수 있는 문장마다 녹음이 있는지 확인한다. 문장을 바꾸고 녹음을 다시 만들지 않았으면 여기서 걸린다. */
+/**
+ * 늘 녹음으로 재생하는 탑승 외침과, Pleos TTS SDK를 못 쓸 때 재생할 안전 안내 예비 녹음을 확인한다.
+ * 문장을 바꾸고 녹음을 다시 만들지 않았으면 여기서 걸린다.
+ */
 class VoiceAssetsTest {
 
     private val dir = File("src/main/assets/voice")
@@ -14,9 +17,18 @@ class VoiceAssetsTest {
         .associate { line -> line.split('\t').let { it[0] to it[1] } }
 
     @Test
-    fun `모든 안내 문장에 녹음이 있다`() {
-        val missing = Announcements.all().filterNot { it in index }
-        assertEquals(emptyList(), missing)
+    fun `탑승 외침과 안전 안내마다 녹음이 있다`() {
+        val safety = listOf(
+            Announcements.SCHOOL_ZONE, Announcements.BELT,
+            Announcements.REST_DUE, Announcements.REST_AREA_AHEAD, Announcements.REST_SEARCH,
+        )
+        assertEquals(safety.toSet() + Announcements.BOARDING, index.keys)
+    }
+
+    @Test
+    fun `녹음은 모두 앱이 말하는 문장이다`() {
+        val all = Announcements.all().toSet()
+        assertEquals(emptyList(), index.keys.filterNot { it in all })
     }
 
     @Test
@@ -31,13 +43,13 @@ class VoiceAssetsTest {
     }
 
     @Test
-    fun `모든 안내 앞에 재생할 묵음 녹음이 있다`() {
+    fun `예비 녹음 앞에 재생할 묵음 녹음이 있다`() {
         assertTrue(File(dir, "_preroll.ogg").isFile)
     }
 
     @Test
-    fun `녹음은 모두 합쳐 5MB를 넘지 않는다`() {
-        val total = index.values.sumOf { File(dir, it).length() }
-        assertTrue(total < 5_000_000, "녹음 ${total}바이트")
+    fun `녹음 폴더에는 색인에 있는 녹음과 묵음 녹음만 있다`() {
+        val files = dir.listFiles()!!.map { it.name }.filter { it.endsWith(".ogg") }.toSet()
+        assertEquals(index.values.toSet() + "_preroll.ogg", files)
     }
 }

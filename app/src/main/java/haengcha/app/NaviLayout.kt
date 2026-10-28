@@ -20,12 +20,14 @@ object NaviLayout {
 
     /** 지금 창이 세 칸 가운데 칸이면 내비게이션을 앞으로 부른다. */
     fun moveAside(activity: Activity): Result {
-        if (!activity.isInMultiWindowMode) return Result.WAIT
         val wm = activity.windowManager
         val me = wm.currentWindowMetrics.bounds
         val screen = wm.maximumWindowMetrics.bounds
         // Pleos 홈이 창을 칸에 앉히기 전에는 (0,0)에서 시작하는 크기만 보인다(맨 왼쪽은 Driving View 자리라 앱이 올 수 없다)
-        if (me.left == 0) return Result.WAIT
+        if (!activity.isInMultiWindowMode || me.left == 0) {
+            Log.d(TAG, "자리 기다림: 멀티 윈도=${activity.isInMultiWindowMode}, $me")
+            return Result.WAIT
+        }
         // 한 칸 너비(화면의 1/3쯤)이고 가운데 칸에 있을 때만. 두 칸을 다 쓰거나 이미 오른쪽이면 그대로 둔다
         val oneColumn = me.width() < screen.width() * 0.45
         val center = me.left > screen.width() * 0.2 && me.right < screen.width() * 0.8

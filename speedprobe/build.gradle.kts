@@ -31,4 +31,6 @@ dependencies {
     // Pleos SDK 값이 에뮬레이터에서 나오는지 확인하는 용도(PleosProbe)
     implementation(libs.pleos.vehicle)
     implementation(libs.pleos.navihelper)
+    // Pleos TTS SDK가 에뮬레이터에서 합성되는지 확인하는 용도(TtsProbe)
+    implementation(libs.pleos.tts)
 }

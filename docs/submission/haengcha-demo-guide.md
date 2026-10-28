@@ -60,7 +60,7 @@ adb shell am broadcast --user 10 -a haengcha.app.DEBUG -p haengcha.app <옵션>
     - 운전석 안전띠 체결 신호가 늘 '안 맴'이라 안전띠 경고등으로 판정합니다(`--preset unbelted`/`belted`).
     - 내비게이션의 차 위치가 움직이지 않아, 명소 도착은 앱이 받는 위치와 내비게이션 목적지 좌표로 판정합니다.
 - 차속·기어·주행 규제는 AAOS Car API로, 배터리·적산거리·경고등·전조등·와이퍼·안전띠는 Pleos Vehicle SDK로, 목적지·회전 안내·휴게소 검색은 Pleos NaviHelper SDK로 받습니다.
-- 안내 음성은 미리 녹음한 문장입니다(Pleos TTS SDK 준비 중).
+- 안내 음성은 Pleos TextToSpeech SDK(ON_DEVICE)로 합성하고, 탑승 외침만 녹음을 씁니다. 에뮬레이터 메모리가 모자라면 음성이 몇 초 늦게 나올 수 있으니 다른 앱은 닫아 둡니다.
 
 ## 5. 막힐 때
 
